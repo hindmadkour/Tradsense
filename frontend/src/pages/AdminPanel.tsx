@@ -526,8 +526,8 @@ const AdminPanel = () => {
 
   const stats = [
     { label: t('admin_total_accounts'), value: accounts.length.toString(), icon: Users, color: 'from-primary to-blue-400' },
-    { label: t('admin_active_challenges'), value: accounts.filter(a => a.status === 'active').length.toString(), icon: Activity, color: 'from-emerald-400 to-teal-500' },
-    { label: t('admin_funded'), value: accounts.filter(a => a.status === 'funded').length.toString(), icon: CheckCircle, color: 'from-success to-emerald-400' },
+    { label: t('admin_active_challenges'), value: accounts.filter(a => a.status === 'active').length.toString(), icon: Activity, color: 'from-[#7b1e2b] to-[#5c0f1f]' },
+    { label: t('admin_funded'), value: accounts.filter(a => a.status === 'funded').length.toString(), icon: CheckCircle, color: 'from-success to-[#7b1e2b]' },
     { label: t('admin_failed'), value: accounts.filter(a => a.status === 'failed').length.toString(), icon: XCircle, color: 'from-destructive to-orange-400' },
   ];
 
@@ -613,7 +613,7 @@ const AdminPanel = () => {
       <aside className="w-64 bg-sidebar border-r border-sidebar-border hidden lg:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center">
               <TrendingIcon className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -763,7 +763,7 @@ const AdminPanel = () => {
                         {card.label}
                       </div>
                       <div className="text-2xl font-semibold mt-2">{card.value}</div>
-                      <div className={`mt-2 inline-flex items-center gap-1 text-xs ${card.trendUp ? 'text-emerald-400' : 'text-orange-300'}`}>
+                      <div className={`mt-2 inline-flex items-center gap-1 text-xs ${card.trendUp ? 'text-[#7b1e2b]' : 'text-orange-300'}`}>
                         {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                         {card.delta}
                       </div>
@@ -942,7 +942,7 @@ const AdminPanel = () => {
                   </div>
                   <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-emerald-400" />
+                      <Shield className="w-4 h-4 text-[#7b1e2b]" />
                       <span>No compliance breaches today</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground">Low</span>

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import Index from "../pages/Index";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -29,7 +30,7 @@ import Refund from "../pages/Refund";
 
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { ThemeProvider } from "../components/theme-provider";
-import ChatWidget from "../components/chat/ChatWidget";
+import GrokChatWidget from "../components/chat/GrokChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -56,39 +57,15 @@ const ScrollToHash = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <LanguageProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ScrollToHash />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/trading" element={<Trading />} />
-              <Route path="/dashboard/challenge" element={<Challenge />} />
-              <Route path="/dashboard/wallet" element={<Wallet />} />
-              <Route path="/dashboard/profile" element={<Profile />} />
-              <Route path="/dashboard/leaderboard" element={<DashboardLeaderboard />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<AdminPanel />} />
-              <Route path="/market-casablanca" element={<MarketCasablanca />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/press" element={<Press />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/risk" element={<Risk />} />
-              <Route path="/refund" element={<Refund />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <ChatWidget />
+            <AnimatedRoutes />
+            <GrokChatWidget />
           </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
@@ -97,3 +74,37 @@ const App = () => (
 );
 
 export default App;
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/trading" element={<Trading />} />
+        <Route path="/dashboard/challenge" element={<Challenge />} />
+        <Route path="/dashboard/wallet" element={<Wallet />} />
+        <Route path="/dashboard/profile" element={<Profile />} />
+        <Route path="/dashboard/leaderboard" element={<DashboardLeaderboard />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/market-casablanca" element={<MarketCasablanca />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/press" element={<Press />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/risk" element={<Risk />} />
+        <Route path="/refund" element={<Refund />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};

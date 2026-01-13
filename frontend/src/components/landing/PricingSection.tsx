@@ -61,11 +61,9 @@ const PricingSection = () => {
   const { t } = useLanguage();
   return (
     <section id="pricing" className="py-24 relative">
-      {/* Background */}
-      <div className="absolute inset-0 bg-hero-pattern opacity-50" />
+      <div className="absolute inset-0 bg-hero-pattern opacity-30" />
       
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Choose Your{' '}
@@ -76,16 +74,16 @@ const PricingSection = () => {
           </p>
         </div>
 
-        {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`surface-card p-8 relative ${plan.popular ? 'border-2 border-primary' : ''} hover:-translate-y-2 transition-all duration-300`}
+              className={`relative p-8 transition-all duration-300 hover:-translate-y-2 ${plan.popular ? 'gradient-border' : ''}`}
             >
+              <div className={`glass-card h-full ${plan.popular ? 'border-transparent' : ''} p-8`}>
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-emerald-400 rounded-full flex items-center gap-1">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-[#7b1e2b] rounded-full flex items-center gap-1">
                   <Star className="w-4 h-4 text-white fill-white" />
                   <span className="text-sm font-semibold text-white">Most Popular</span>
                 </div>
@@ -131,6 +129,7 @@ const PricingSection = () => {
                   Start Challenge
                 </Link>
               </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -141,7 +140,7 @@ const PricingSection = () => {
             { title: t('pricing_meta_target'), value: '10%' },
             { title: t('pricing_meta_rules'), value: '5% daily / 10% total' },
           ].map((item) => (
-            <div key={item.title} className="surface-card p-4 text-center">
+            <div key={item.title} className="glass-panel p-4 text-center">
               <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{item.title}</div>
               <div className="text-lg font-semibold mt-2">{item.value}</div>
             </div>

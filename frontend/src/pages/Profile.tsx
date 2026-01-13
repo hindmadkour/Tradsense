@@ -350,7 +350,7 @@ const Profile = () => {
             <p className="text-muted-foreground">{t('profile_subtitle')}</p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-border/60 bg-secondary/40 px-4 py-2 text-xs text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="h-2 w-2 rounded-full bg-[#7b1e2b]" />
             Trader profile active
           </div>
         </div>
@@ -373,7 +373,7 @@ const Profile = () => {
               </div>
               <div className="mt-6 flex flex-col items-center text-center">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center overflow-hidden shadow-lg">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center overflow-hidden shadow-lg">
                     {avatarData ? (
                       <img src={avatarData} alt="Profile" className="w-full h-full object-cover" />
                     ) : (

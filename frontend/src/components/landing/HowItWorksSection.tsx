@@ -30,44 +30,44 @@ const steps = [
 const HowItWorksSection = () => {
   return (
     <section id="how-it-works" className="py-24 relative overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
       
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
+      <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-start">
+        <div>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            How It{' '}
-            <span className="gradient-text">Works</span>
+            How It <span className="gradient-text">Works</span>
           </h2>
           <p className="text-muted-foreground text-lg">
             From registration to funded trader in four simple steps. Our AI-powered platform guides you every step of the way.
           </p>
+          <div className="mt-8 glass-panel p-6">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <Target className="h-4 w-4 text-primary" />
+              Profit target reached? Get funded in days, not months.
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-3">
+              <Award className="h-4 w-4 text-success" />
+              Scale capital as you prove consistency.
+            </div>
+          </div>
         </div>
 
-        {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="space-y-6">
           {steps.map((step, index) => (
-            <div key={index} className="relative group">
-              {/* Connector Line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-12 left-1/2 w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent" />
-              )}
-
-              {/* Card */}
-              <div className="surface-card p-6 text-center relative hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-                {/* Step Number */}
-                <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">{step.step}</span>
+            <div key={index} className="relative glass-card p-6 flex gap-4 items-start">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-[#7b1e2b]/20 flex items-center justify-center">
+                  <step.icon className="w-6 h-6 text-primary" />
                 </div>
-
-                {/* Icon */}
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-emerald-400/20 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
-                  <step.icon className="w-8 h-8 text-primary" />
+                {index < steps.length - 1 && (
+                  <div className="w-px h-10 bg-gradient-to-b from-primary/50 to-transparent mt-3" />
+                )}
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                  Step {step.step}
                 </div>
-
-                {/* Content */}
-                <h3 className="text-lg font-semibold mb-3">{step.title}</h3>
+                <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
               </div>
             </div>

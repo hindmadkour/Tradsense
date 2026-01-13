@@ -34,7 +34,7 @@ const planMeta: Record<string, { icon: typeof Star; features: string[]; color: s
   elite: {
     icon: Crown,
     features: ['All Pro features', '1-on-1 coaching', 'VIP community'],
-    color: 'from-emerald-400 to-teal-500',
+    color: 'from-[#7b1e2b] to-[#5c0f1f]',
   },
 };
 

@@ -30,6 +30,8 @@ services:
       - "8001:8001"
     volumes:
       - ./backend:/app
+    env_file:
+      - ./backend/.env
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
     environment:
       - DATABASE_URL=postgresql://tradesense:password@db:5432/tradesense
@@ -46,6 +48,8 @@ services:
     command: celery -A celery_worker.celery worker --loglevel=info
     volumes:
       - ./backend:/app
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://tradesense:password@db:5432/tradesense
       - CELERY_BROKER_URL=redis://redis:6379/0

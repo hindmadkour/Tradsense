@@ -8,7 +8,7 @@ const BvcSection = () => {
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
-        <div className="surface-card p-8 lg:p-10 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
+        <div className="glass-card p-8 lg:p-10 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
           <div>
             <div className="section-title mb-3">{t('bvc_section_title')}</div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('bvc_title')}</h2>
@@ -25,7 +25,7 @@ const BvcSection = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4">
-            <div className="surface-card p-4 flex items-center gap-3">
+            <div className="glass-panel p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-success" />
               </div>
@@ -34,7 +34,7 @@ const BvcSection = () => {
                 <div className="text-xs text-muted-foreground">{t('bvc_card_shares_desc')}</div>
               </div>
             </div>
-            <div className="surface-card p-4 flex items-center gap-3">
+            <div className="glass-panel p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
                 <LineChart className="w-5 h-5 text-primary" />
               </div>
@@ -43,7 +43,7 @@ const BvcSection = () => {
                 <div className="text-xs text-muted-foreground">{t('bvc_card_tv_desc')}</div>
               </div>
             </div>
-            <div className="surface-card p-4 flex items-center gap-3">
+            <div className="glass-panel p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
                 <LineChart className="w-5 h-5 text-warning" />
               </div>

@@ -1,28 +1,34 @@
-import Navbar from '@/components/landing/Navbar';
-import HeroSection from '@/components/landing/HeroSection';
-import TrustSection from '@/components/landing/TrustSection';
-import PillarsSection from '@/components/landing/PillarsSection';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import BvcSection from '@/components/landing/BvcSection';
-import PricingSection from '@/components/landing/PricingSection';
-import HowItWorksSection from '@/components/landing/HowItWorksSection';
-import TestimonialsSection from '@/components/landing/TestimonialsSection';
-import Footer from '@/components/landing/Footer';
+import PageTransition from "@/components/motion/PageTransition";
+import LandingNavbar from "@/components/landing/LandingNavbar";
+import LandingHero from "@/components/landing/LandingHero";
+import LandingProduct from "@/components/landing/LandingProduct";
+import LandingMarkets from "@/components/landing/LandingMarkets";
+import LandingSignals from "@/components/landing/LandingSignals";
+import LandingStats from "@/components/landing/LandingStats";
+import LandingPricing from "@/components/landing/LandingPricing";
+import LandingCTA from "@/components/landing/LandingCTA";
+import LandingFooter from "@/components/landing/LandingFooter";
+import LandingCommandCenter from "@/components/landing/LandingCommandCenter";
+import LandingSentiment from "@/components/landing/LandingSentiment";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <PillarsSection />
-      <HowItWorksSection />
-      <TrustSection />
-      <BvcSection />
-      <PricingSection />
-      <TestimonialsSection />
-      <Footer />
-    </div>
+    <PageTransition>
+      <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 market-grid opacity-25" />
+        <LandingNavbar />
+        <LandingHero />
+        <LandingCommandCenter />
+        <LandingProduct />
+        <LandingMarkets />
+        <LandingSentiment />
+        <LandingSignals />
+        <LandingStats />
+        <LandingPricing />
+        <LandingCTA />
+        <LandingFooter />
+      </div>
+    </PageTransition>
   );
 };
 

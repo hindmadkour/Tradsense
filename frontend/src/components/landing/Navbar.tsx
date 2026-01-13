@@ -18,19 +18,23 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-2xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-2xl shadow-[0_20px_40px_-28px_rgba(0,0,0,0.65)]">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4 md:grid md:grid-cols-[1fr,auto,1fr] md:items-center">
           {/* Left: Theme + Language + Logo */}
           <div className="flex items-center gap-3 md:justify-self-start">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow">
+              <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-bold tracking-tight">
                 Trade<span className="gradient-text">Sense</span>
               </span>
             </Link>
+            <div className="hidden lg:flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs text-success">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              Live markets
+            </div>
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}

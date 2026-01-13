@@ -9,11 +9,12 @@ const TrustSection = () => {
     { label: t('trust_stat_winrate'), value: '81%' },
     { label: t('trust_stat_markets'), value: t('trust_stat_markets_value') },
   ];
+  const logoStrip = [...partnerLogos, ...partnerLogos];
 
   return (
-    <section className="py-16">
+    <section className="py-16 relative">
       <div className="container mx-auto px-4">
-        <div className="surface-card p-8">
+        <div className="glass-card p-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             {stats.map((stat) => (
               <div key={stat.label}>
@@ -22,16 +23,18 @@ const TrustSection = () => {
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
-            {partnerLogos.map((logo) => (
-              <div key={logo.name} className="px-4 py-2 rounded-full border border-border/70 bg-secondary/40">
-                {logo.logoSrc ? (
-                  <img src={logo.logoSrc} alt={logo.name} className="h-4" />
-                ) : (
-                  logo.name
-                )}
-              </div>
-            ))}
+          <div className="marquee">
+            <div className="ticker-track">
+              {logoStrip.map((logo, index) => (
+                <div key={`${logo.name}-${index}`} className="px-4 py-2 rounded-full border border-border/70 bg-secondary/40 text-xs text-muted-foreground">
+                  {logo.logoSrc ? (
+                    <img src={logo.logoSrc} alt={logo.name} className="h-4" />
+                  ) : (
+                    logo.name
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

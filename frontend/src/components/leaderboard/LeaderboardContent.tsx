@@ -164,7 +164,7 @@ const LeaderboardContent = ({ inDashboard = false, showCta = true }: Leaderboard
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center">
                           <span className="text-sm font-bold text-white">
                             {trader.user_name.split(' ').map((n) => n[0]).join('')}
                           </span>

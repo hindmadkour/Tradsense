@@ -13,11 +13,7 @@ interface ChatMessage {
 
 const getQuickReplies = (language: string) => {
   if (language === "ar") {
-    return [
-      "كيف أبدأ التحدي؟",
-      "ما هي الأسعار؟",
-      "ما هي قواعد السحب؟",
-    ];
+    return ["كيف أبدأ التحدي؟", "ما هي الأسعار؟", "ما هي قواعد السحب؟"];
   }
   if (language === "en") {
     return ["How do I start?", "What are the prices?", "What are the rules?"];
@@ -35,7 +31,7 @@ const getGreeting = (language: string) => {
   return "Bonjour ! Comment puis-je vous aider aujourd'hui ?";
 };
 
-const ChatWidget = () => {
+const GrokChatWidget = () => {
   const { language, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -75,12 +71,13 @@ const ChatWidget = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/gemini`, {
+      const response = await fetch(`${API_BASE_URL}/chat/grok`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: nextMessages,
-          language,
+          model: "grok-4-latest",
+          temperature: 0.3,
         }),
       });
       if (!response.ok) {
@@ -113,7 +110,7 @@ const ChatWidget = () => {
         className="group relative flex items-center gap-2 rounded-full border border-border/60 bg-card/80 px-4 py-3 shadow-[0_20px_50px_-25px_rgba(15,23,42,0.6)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-primary/40"
         aria-label={isOpen ? t("chat_close") : t("chat_open")}
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-emerald-400 text-white shadow-lg shadow-primary/30">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#7b1e2b] text-white shadow-lg shadow-primary/30">
           <MessageCircle className="h-5 w-5" />
         </span>
         <span className="hidden text-sm font-semibold text-foreground sm:inline">
@@ -132,7 +129,12 @@ const ChatWidget = () => {
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
             <div>
               <p className="text-sm font-semibold">{t("chat_title")}</p>
-              <p className="text-xs text-muted-foreground">{t("chat_subtitle")}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">{t("chat_subtitle")}</p>
+                <span className="rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold">
+                  Gemini
+                </span>
+              </div>
             </div>
             <button
               type="button"
@@ -186,9 +188,7 @@ const ChatWidget = () => {
             ))}
           </div>
 
-          {error && (
-            <div className="px-4 pb-2 text-xs text-destructive">{error}</div>
-          )}
+          {error && <div className="px-4 pb-2 text-xs text-destructive">{error}</div>}
 
           <form onSubmit={onSubmit} className="flex items-center gap-2 border-t border-border/60 px-4 py-3">
             <input
@@ -208,4 +208,4 @@ const ChatWidget = () => {
   );
 };
 
-export default ChatWidget;
+export default GrokChatWidget;

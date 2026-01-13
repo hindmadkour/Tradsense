@@ -114,7 +114,7 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold">
@@ -215,10 +215,10 @@ const Login = () => {
       </div>
 
       {/* Right Side - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary/10 via-emerald-400/10 to-background items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary/10 via-[#7b1e2b]/10 to-background items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 chart-grid opacity-20" />
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-primary/30 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-emerald-400/30 rounded-full blur-[80px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-[#7b1e2b]/30 rounded-full blur-[80px]" />
         
         <div className="relative z-10 text-center">
           <div className="text-6xl font-bold gradient-text mb-4">85%</div>

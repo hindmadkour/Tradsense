@@ -33,13 +33,13 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="border-t border-border bg-card/60">
+    <footer className="border-t border-border/60 bg-background/80">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold">
@@ -117,7 +117,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-border/60 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             © {currentYear} TradeSense AI. All rights reserved.
           </p>
