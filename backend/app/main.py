@@ -36,6 +36,10 @@ load_env_file(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".en
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
+    @app.get("/api/paypal/client-id")
+def get_paypal_client_id():
+    client_id = os.getenv("PAYPAL_CLIENT_ID")
+    return {"clientId": client_id}
     title="TradeSense AI API",
     description="API for the TradeSense AI trading platform.",
     version="1.0.0"
