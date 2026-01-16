@@ -31,6 +31,7 @@ import Refund from "../pages/Refund";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { ThemeProvider } from "../components/theme-provider";
 import GrokChatWidget from "../components/chat/GrokChatWidget";
+import { API_BASE_URL } from "../lib/api";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AuthBootstrapper />
             <ScrollToHash />
             <AnimatedRoutes />
             <GrokChatWidget />
@@ -107,4 +109,34 @@ const AnimatedRoutes = () => {
       </Routes>
     </AnimatePresence>
   );
+};
+
+const AuthBootstrapper = () => {
+  useEffect(() => {
+    const syncUser = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/me`, { credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth_user_id");
+            localStorage.removeItem("auth_email");
+            localStorage.removeItem("auth_username");
+            localStorage.removeItem("auth_is_admin");
+          }
+          return;
+        }
+        const data = await res.json();
+        localStorage.setItem("auth_user_id", String(data.user_id));
+        localStorage.setItem("auth_email", data.email);
+        localStorage.setItem("auth_username", data.username);
+        localStorage.setItem("auth_is_admin", String(Boolean(data.is_admin)));
+      } catch (error) {
+        // Ignore bootstrap failures to avoid blocking the app.
+      }
+    };
+    syncUser();
+  }, []);
+
+  return null;
 };

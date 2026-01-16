@@ -29,6 +29,7 @@ except Exception:
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 oauth_router = APIRouter(tags=["Auth"])
+me_router = APIRouter(prefix="/api", tags=["Auth"])
 logger = logging.getLogger("tradesense.auth")
 USED_OAUTH_CODES: Dict[str, float] = {}
 OAUTH_CODE_TTL_SECONDS = 300
@@ -56,6 +57,13 @@ class GoogleAuthRequest(BaseModel):
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    user_id: int
+    email: str
+    username: str
+    is_admin: bool
+
+
+class CurrentUserResponse(BaseModel):
     user_id: int
     email: str
     username: str
@@ -169,6 +177,15 @@ def _auth_user_from_google(
         "username": user.username,
         "is_admin": bool(user.is_admin),
     }
+
+
+def _get_user_from_token(db: Session, token: Optional[str]) -> Optional[models.User]:
+    if not token:
+        return None
+    token_row = db.query(models.AuthToken).filter_by(token=token).first()
+    if token_row is None:
+        return None
+    return db.query(models.User).get(token_row.user_id)
 
 
 @oauth_router.get("/auth/google")
@@ -307,6 +324,24 @@ def google_oauth_callback(
     except Exception:
         logger.exception("Google OAuth callback failed with unexpected error")
         raise HTTPException(status_code=500, detail="Google OAuth failed")
+
+
+@me_router.get("/me", response_model=CurrentUserResponse)
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> Dict[str, str]:
+    token = request.cookies.get("auth_token")
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+    user = _get_user_from_token(db, token)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "username": user.username,
+        "is_admin": bool(user.is_admin),
+    }
 
 
 @router.post("/register", response_model=AuthResponse)

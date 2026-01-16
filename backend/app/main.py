@@ -55,9 +55,12 @@ def get_paypal_client_id():
 # --------- MIDDLEWARE ----------
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
+frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+allow_origins = [frontend_url] if frontend_url else ["https://tradsense-puce.vercel.app"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # OK for dev / sandbox
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -120,6 +123,7 @@ app.include_router(extra.router)
 app.include_router(compat.router)
 app.include_router(auth.router)
 app.include_router(auth.oauth_router)
+app.include_router(auth.me_router)
 app.include_router(grok.router)
 
 # --------- HEALTH CHECK ----------
