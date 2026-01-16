@@ -1,8 +1,11 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 import logging
 import os
+import secrets
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -17,8 +20,14 @@ except Exception:
     google_id_token = None
     google_requests = None
 
+try:
+    import requests
+except Exception:
+    requests = None
+
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
+oauth_router = APIRouter(tags=["Auth"])
 logger = logging.getLogger("tradesense.auth")
 
 
@@ -50,15 +59,27 @@ class AuthResponse(BaseModel):
     is_admin: bool
 
 
-def _get_google_client_ids() -> list[str]:
-    raw_ids = os.environ.get("GOOGLE_CLIENT_IDS", "")
-    ids = [item.strip() for item in raw_ids.split(",") if item.strip()]
-    single = os.environ.get("GOOGLE_CLIENT_ID")
-    if single:
-        ids.append(single.strip())
-    if not ids:
-        ids = ["132353474250-lb2mb6ecm3k0ot4voi7j7366arbdnj81.apps.googleusercontent.com"]
-    return list(dict.fromkeys(ids))
+def _get_google_oauth_config() -> Tuple[str, str, str]:
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+    callback_url = os.environ.get("GOOGLE_CALLBACK_URL", "").strip()
+    if not client_id or not client_secret or not callback_url:
+        logger.error(
+            "Google OAuth env missing: client_id=%s client_secret=%s callback_url=%s",
+            bool(client_id),
+            bool(client_secret),
+            bool(callback_url),
+        )
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured")
+    return client_id, client_secret, callback_url
+
+
+def _get_google_client_id() -> str:
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    if not client_id:
+        logger.error("Google OAuth env missing: GOOGLE_CLIENT_ID")
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured")
+    return client_id
 
 
 def _find_unique_username(db: Session, base: str) -> str:
@@ -69,6 +90,131 @@ def _find_unique_username(db: Session, base: str) -> str:
         suffix += 1
         username = f"{base}{suffix}"
     return username
+
+
+def _auth_user_from_google(
+    db: Session,
+    idinfo: Dict[str, str],
+    account_type: Optional[str] = None,
+    plan: Optional[str] = None,
+) -> Dict[str, str]:
+    email = idinfo.get("email")
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Google account email is missing")
+
+    user = db.query(models.User).filter_by(email=email.lower().strip()).first()
+    if user is None:
+        name = idinfo.get("name") or email.split("@", 1)[0]
+        username = _find_unique_username(db, name.replace(" ", "").lower())
+        user = models.User(
+            username=username,
+            email=email.lower().strip(),
+            password_hash=None,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        account_type = (account_type or "").lower().strip()
+        plan = (plan or "").lower().strip()
+        if account_type in {"demo", "trial", "paid"}:
+            balance = 0.0
+            status = "active"
+            challenge_type = account_type
+            if account_type == "demo":
+                balance = 10000.0
+            elif account_type == "trial":
+                balance = 2000.0
+            else:
+                challenge = db.query(models.Challenge).filter(
+                    models.Challenge.name.ilike(plan or "")
+                ).first()
+                if challenge:
+                    balance = challenge.initial_balance
+                    challenge_type = challenge.name.lower()
+                status = "pending"
+
+            new_account = models.Account(
+                user_id=user.id,
+                balance=balance,
+                equity=balance,
+                initial_balance=balance,
+                daily_starting_equity=balance,
+                challenge_type=challenge_type,
+                status=status,
+            )
+            db.add(new_account)
+            db.commit()
+
+    token = create_access_token(str(user.id))
+    db.add(models.AuthToken(user_id=user.id, token=token))
+    db.commit()
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "email": user.email,
+        "username": user.username,
+        "is_admin": bool(user.is_admin),
+    }
+
+
+@oauth_router.get("/auth/google")
+def google_oauth_start(request: Request) -> RedirectResponse:
+    client_id, _, callback_url = _get_google_oauth_config()
+    logger.info("Google OAuth start: client_id=%s callback_url=%s", client_id, callback_url)
+    params = {
+        "client_id": client_id,
+        "redirect_uri": callback_url,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": secrets.token_urlsafe(16),
+    }
+    url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+    return RedirectResponse(url=url)
+
+
+@oauth_router.get("/auth/google/callback")
+def google_oauth_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    client_id, client_secret, callback_url = _get_google_oauth_config()
+    logger.info("Google OAuth callback: client_id=%s callback_url=%s", client_id, callback_url)
+    code = request.query_params.get("code")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing authorization code")
+    if requests is None:
+        raise HTTPException(status_code=500, detail="Requests library is not installed")
+    token_response = requests.post(
+        "https://oauth2.googleapis.com/token",
+        data={
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": callback_url,
+            "grant_type": "authorization_code",
+        },
+        timeout=10,
+    )
+    token_payload = token_response.json() if token_response.content else {}
+    if not token_response.ok:
+        logger.error("Google OAuth token exchange failed: %s", token_payload)
+        raise HTTPException(status_code=401, detail=token_payload.get("error", "Google OAuth failed"))
+    id_token_value = token_payload.get("id_token")
+    if not id_token_value:
+        raise HTTPException(status_code=401, detail="Missing id_token from Google")
+    if google_id_token is None or google_requests is None:
+        raise HTTPException(status_code=500, detail="Google auth libraries are not installed")
+    request_adapter = google_requests.Request()
+    idinfo = google_id_token.verify_oauth2_token(id_token_value, request_adapter, client_id)
+    if idinfo.get("iss") not in {"accounts.google.com", "https://accounts.google.com"}:
+        raise HTTPException(status_code=401, detail="Invalid Google token issuer")
+    if not idinfo.get("email_verified", False):
+        raise HTTPException(status_code=401, detail="Google account email is not verified")
+    return _auth_user_from_google(db, idinfo)
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -165,9 +311,7 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)) -> Di
         raise HTTPException(status_code=500, detail="Google auth libraries are not installed")
 
     request = google_requests.Request()
-    allowed = _get_google_client_ids()
-    if not allowed:
-        logger.warning("Google auth: no GOOGLE_CLIENT_ID(S) configured")
+    allowed = [_get_google_client_id()]
     try:
         idinfo = None
         last_error = None
@@ -200,63 +344,4 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)) -> Di
     if not idinfo.get("email_verified", False):
         logger.warning("Google auth: email not verified email=%s", idinfo.get("email"))
         raise HTTPException(status_code=401, detail="Google account email is not verified")
-
-    email = idinfo.get("email")
-    if not email or "@" not in email:
-        raise HTTPException(status_code=400, detail="Google account email is missing")
-
-    user = db.query(models.User).filter_by(email=email.lower().strip()).first()
-    if user is None:
-        name = idinfo.get("name") or email.split("@", 1)[0]
-        username = _find_unique_username(db, name.replace(" ", "").lower())
-        user = models.User(
-            username=username,
-            email=email.lower().strip(),
-            password_hash=None,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-        account_type = (payload.account_type or "").lower().strip()
-        plan = (payload.plan or "").lower().strip()
-        if account_type in {"demo", "trial", "paid"}:
-            balance = 0.0
-            status = "active"
-            challenge_type = account_type
-            if account_type == "demo":
-                balance = 10000.0
-            elif account_type == "trial":
-                balance = 2000.0
-            else:
-                challenge = db.query(models.Challenge).filter(
-                    models.Challenge.name.ilike(plan or "")
-                ).first()
-                if challenge:
-                    balance = challenge.initial_balance
-                    challenge_type = challenge.name.lower()
-                status = "pending"
-
-            new_account = models.Account(
-                user_id=user.id,
-                balance=balance,
-                equity=balance,
-                initial_balance=balance,
-                daily_starting_equity=balance,
-                challenge_type=challenge_type,
-                status=status,
-            )
-            db.add(new_account)
-            db.commit()
-
-    token = create_access_token(str(user.id))
-    db.add(models.AuthToken(user_id=user.id, token=token))
-    db.commit()
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user_id": user.id,
-        "email": user.email,
-        "username": user.username,
-        "is_admin": bool(user.is_admin),
-    }
+    return _auth_user_from_google(db, idinfo, payload.account_type, payload.plan)

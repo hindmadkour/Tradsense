@@ -119,6 +119,7 @@ app.include_router(challenges.router)
 app.include_router(extra.router)
 app.include_router(compat.router)
 app.include_router(auth.router)
+app.include_router(auth.oauth_router)
 app.include_router(grok.router)
 
 # --------- HEALTH CHECK ----------
