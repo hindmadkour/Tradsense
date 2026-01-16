@@ -97,6 +97,7 @@ const Checkout = () => {
             createOrder: async () => {
               const res = await fetch(`${API_BASE_URL}/paypal/create-order`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   user_id: userId,
@@ -113,6 +114,7 @@ const Checkout = () => {
               setProcessing('paypal');
               const res = await fetch(`${API_BASE_URL}/paypal/capture-order`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   order_id: data.orderID,
@@ -148,6 +150,7 @@ const Checkout = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/cmi/generate-form`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: userId,
@@ -187,6 +190,7 @@ const Checkout = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/crypto/create-order`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: 1, // Use real user id
