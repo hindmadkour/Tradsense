@@ -13,6 +13,7 @@ psycopg2-binary
 yfinance
 beautifulsoup4
 requests
+certifi
 pandas
 playwright
 

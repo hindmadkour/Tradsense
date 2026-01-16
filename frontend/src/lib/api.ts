@@ -1,6 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 
-const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+const DEFAULT_DEV_API_BASE_URL = 'http://localhost:8001';
+
+const resolveApiBaseUrl = () => {
+    const envBase = import.meta.env.VITE_API_BASE_URL;
+    if (envBase) return envBase;
+    if (import.meta.env.DEV) return DEFAULT_DEV_API_BASE_URL;
+    if (typeof window !== 'undefined') return window.location.origin;
+    return DEFAULT_DEV_API_BASE_URL;
+};
+
+const RAW_API_BASE_URL = resolveApiBaseUrl();
 export const API_BASE_URL = RAW_API_BASE_URL.endsWith('/api')
     ? RAW_API_BASE_URL
     : `${RAW_API_BASE_URL.replace(/\/$/, '')}/api`;

@@ -28,8 +28,6 @@ Frontend `.env` in `frontend/.env`:
 ```
 VITE_API_BASE_URL=http://localhost:8001
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 Backend `.env` in `backend/.env`:
 ```
@@ -63,5 +61,4 @@ PAYPAL_CURRENCY=USD
 - Output Directory: `dist`
 - Set env vars in Vercel:
   - `VITE_API_BASE_URL` (your Render backend URL)
-  - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
   - `VITE_GOOGLE_CLIENT_ID` (if using Google login)

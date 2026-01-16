@@ -1391,11 +1391,12 @@ def paypal_config(
 
 
 @router.get("/paypal/config/public")
-def paypal_public_config(db: Session = Depends(get_db)) -> Dict[str, Any]:
-    config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
-    if not config:
-        raise HTTPException(status_code=404, detail="PayPal not configured")
-    return {"client_id": config.client_id, "currency_code": config.currency_code}
+def paypal_public_config() -> Dict[str, Any]:
+    client_id = os.environ.get("PAYPAL_CLIENT_ID", "").strip()
+    if not client_id:
+        raise HTTPException(status_code=503, detail="PAYPAL_CLIENT_ID is not configured")
+    currency_code = os.environ.get("PAYPAL_CURRENCY", "USD").strip() or "USD"
+    return {"client_id": client_id, "currency_code": currency_code}
 
 
 @router.post("/paypal/create-order")
