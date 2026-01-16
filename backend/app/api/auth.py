@@ -77,6 +77,14 @@ def _get_google_oauth_config() -> Tuple[str, str, str]:
     return client_id, client_secret, callback_url
 
 
+def _get_frontend_url() -> str:
+    frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+    if not frontend_url:
+        logger.error("Frontend URL missing: FRONTEND_URL")
+        raise HTTPException(status_code=500, detail="Frontend URL is not configured")
+    return frontend_url.rstrip("/")
+
+
 def _get_google_client_id() -> str:
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     if not client_id:
@@ -249,7 +257,50 @@ def google_oauth_callback(
             raise HTTPException(status_code=401, detail="Invalid Google token issuer")
         if not idinfo.get("email_verified", False):
             raise HTTPException(status_code=401, detail="Google account email is not verified")
-        return _auth_user_from_google(db, idinfo)
+        auth_payload = _auth_user_from_google(db, idinfo)
+        frontend_url = _get_frontend_url()
+        response = RedirectResponse(url=f"{frontend_url}/")
+        response.set_cookie(
+            key="auth_token",
+            value=auth_payload["access_token"],
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=60 * 60 * 24 * 7,
+        )
+        response.set_cookie(
+            key="auth_user_id",
+            value=str(auth_payload["user_id"]),
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=60 * 60 * 24 * 7,
+        )
+        response.set_cookie(
+            key="auth_email",
+            value=auth_payload["email"],
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=60 * 60 * 24 * 7,
+        )
+        response.set_cookie(
+            key="auth_username",
+            value=auth_payload["username"],
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=60 * 60 * 24 * 7,
+        )
+        response.set_cookie(
+            key="auth_is_admin",
+            value=str(auth_payload["is_admin"]),
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=60 * 60 * 24 * 7,
+        )
+        return response
     except HTTPException:
         raise
     except Exception:
