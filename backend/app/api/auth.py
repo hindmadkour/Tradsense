@@ -181,40 +181,67 @@ def google_oauth_callback(
     request: Request,
     db: Session = Depends(get_db),
 ) -> Dict[str, str]:
-    client_id, client_secret, callback_url = _get_google_oauth_config()
-    logger.info("Google OAuth callback: client_id=%s callback_url=%s", client_id, callback_url)
-    code = request.query_params.get("code")
-    if not code:
-        raise HTTPException(status_code=400, detail="Missing authorization code")
-    if requests is None:
-        raise HTTPException(status_code=500, detail="Requests library is not installed")
-    token_response = requests.post(
-        "https://oauth2.googleapis.com/token",
-        data={
-            "code": code,
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "redirect_uri": callback_url,
-            "grant_type": "authorization_code",
-        },
-        timeout=10,
-    )
-    token_payload = token_response.json() if token_response.content else {}
-    if not token_response.ok:
-        logger.error("Google OAuth token exchange failed: %s", token_payload)
-        raise HTTPException(status_code=401, detail=token_payload.get("error", "Google OAuth failed"))
-    id_token_value = token_payload.get("id_token")
-    if not id_token_value:
-        raise HTTPException(status_code=401, detail="Missing id_token from Google")
-    if google_id_token is None or google_requests is None:
-        raise HTTPException(status_code=500, detail="Google auth libraries are not installed")
-    request_adapter = google_requests.Request()
-    idinfo = google_id_token.verify_oauth2_token(id_token_value, request_adapter, client_id)
-    if idinfo.get("iss") not in {"accounts.google.com", "https://accounts.google.com"}:
-        raise HTTPException(status_code=401, detail="Invalid Google token issuer")
-    if not idinfo.get("email_verified", False):
-        raise HTTPException(status_code=401, detail="Google account email is not verified")
-    return _auth_user_from_google(db, idinfo)
+    try:
+        client_id, client_secret, callback_url = _get_google_oauth_config()
+        logger.info("Google OAuth callback: client_id=%s callback_url=%s", client_id, callback_url)
+        error = request.query_params.get("error")
+        if error:
+            error_desc = request.query_params.get("error_description")
+            logger.warning("Google OAuth callback error: %s %s", error, error_desc or "")
+            raise HTTPException(status_code=401, detail=error_desc or error)
+        code = request.query_params.get("code")
+        if not code:
+            raise HTTPException(status_code=400, detail="Missing authorization code")
+        if requests is None:
+            raise HTTPException(status_code=500, detail="Requests library is not installed")
+        try:
+            token_response = requests.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "redirect_uri": callback_url,
+                    "grant_type": "authorization_code",
+                },
+                timeout=10,
+            )
+        except Exception:
+            logger.exception("Google OAuth token exchange request failed")
+            raise HTTPException(status_code=502, detail="Google OAuth token exchange failed")
+        try:
+            token_payload = token_response.json() if token_response.content else {}
+        except ValueError:
+            logger.error("Google OAuth token exchange returned invalid JSON")
+            raise HTTPException(status_code=502, detail="Invalid response from Google")
+        if not token_response.ok:
+            logger.error(
+                "Google OAuth token exchange failed: status=%s payload=%s",
+                token_response.status_code,
+                token_payload,
+            )
+            raise HTTPException(status_code=401, detail=token_payload.get("error", "Google OAuth failed"))
+        id_token_value = token_payload.get("id_token")
+        if not id_token_value:
+            raise HTTPException(status_code=401, detail="Missing id_token from Google")
+        if google_id_token is None or google_requests is None:
+            raise HTTPException(status_code=500, detail="Google auth libraries are not installed")
+        request_adapter = google_requests.Request()
+        try:
+            idinfo = google_id_token.verify_oauth2_token(id_token_value, request_adapter, client_id)
+        except Exception:
+            logger.exception("Google OAuth id_token verification failed")
+            raise HTTPException(status_code=401, detail="Invalid Google token")
+        if idinfo.get("iss") not in {"accounts.google.com", "https://accounts.google.com"}:
+            raise HTTPException(status_code=401, detail="Invalid Google token issuer")
+        if not idinfo.get("email_verified", False):
+            raise HTTPException(status_code=401, detail="Google account email is not verified")
+        return _auth_user_from_google(db, idinfo)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Google OAuth callback failed with unexpected error")
+        raise HTTPException(status_code=500, detail="Google OAuth failed")
 
 
 @router.post("/register", response_model=AuthResponse)
