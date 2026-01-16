@@ -2,6 +2,7 @@ from typing import Dict, Optional, Tuple
 import logging
 import os
 import secrets
+import time
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -29,6 +30,8 @@ except Exception:
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 oauth_router = APIRouter(tags=["Auth"])
 logger = logging.getLogger("tradesense.auth")
+USED_OAUTH_CODES: Dict[str, float] = {}
+OAUTH_CODE_TTL_SECONDS = 300
 
 
 class RegisterRequest(BaseModel):
@@ -192,6 +195,14 @@ def google_oauth_callback(
         code = request.query_params.get("code")
         if not code:
             raise HTTPException(status_code=400, detail="Missing authorization code")
+        now = time.time()
+        expired = [key for key, ts in USED_OAUTH_CODES.items() if now - ts > OAUTH_CODE_TTL_SECONDS]
+        for key in expired:
+            USED_OAUTH_CODES.pop(key, None)
+        if code in USED_OAUTH_CODES:
+            logger.warning("Google OAuth code already used")
+            raise HTTPException(status_code=400, detail="Authorization code already used")
+        USED_OAUTH_CODES[code] = now
         if requests is None:
             raise HTTPException(status_code=500, detail="Requests library is not installed")
         try:
@@ -204,6 +215,7 @@ def google_oauth_callback(
                     "redirect_uri": callback_url,
                     "grant_type": "authorization_code",
                 },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
                 timeout=10,
             )
         except Exception:
@@ -220,7 +232,8 @@ def google_oauth_callback(
                 token_response.status_code,
                 token_payload,
             )
-            raise HTTPException(status_code=401, detail=token_payload.get("error", "Google OAuth failed"))
+            detail = token_payload.get("error_description") or token_payload.get("error") or "Google OAuth failed"
+            raise HTTPException(status_code=401, detail=detail)
         id_token_value = token_payload.get("id_token")
         if not id_token_value:
             raise HTTPException(status_code=401, detail="Missing id_token from Google")
