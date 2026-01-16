@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TrendingUp, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { loginUser, loginWithGoogle } from '@/lib/api';
+import { API_BASE_URL, loginUser } from '@/lib/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,10 +14,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const googleButtonRef = useRef<HTMLDivElement | null>(null);
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-    || '132353474250-lb2mb6ecm3k0ot4voi7j7366arbdnj81.apps.googleusercontent.com';
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,62 +46,9 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    let intervalId: number | null = null;
-    const renderButton = () => {
-      if (!googleButtonRef.current || !window.google?.accounts?.id) return;
-      googleButtonRef.current.innerHTML = '';
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: async (response) => {
-          setIsGoogleLoading(true);
-          try {
-            const data = await loginWithGoogle({ id_token: response.credential });
-            const isAdmin = Boolean(data.is_admin);
-            localStorage.setItem('auth_token', data.access_token);
-            localStorage.setItem('auth_user_id', String(data.user_id));
-            localStorage.setItem('auth_email', data.email);
-            localStorage.setItem('auth_username', data.username);
-            localStorage.setItem('auth_is_admin', String(isAdmin));
-            toast({ title: 'Welcome!', description: 'Signed in with Google. Redirecting...' });
-            navigate('/dashboard');
-          } catch (error) {
-            toast({
-              title: 'Google sign-in failed',
-              description: error instanceof Error ? error.message : 'Unable to sign in with Google.',
-              variant: 'destructive',
-            });
-          } finally {
-            setIsGoogleLoading(false);
-          }
-        },
-        ux_mode: 'popup',
-      });
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        shape: 'pill',
-        text: 'continue_with',
-        width: '360',
-        logo_alignment: 'left',
-      });
-    };
-
-    if (window.google?.accounts?.id) {
-      renderButton();
-    } else {
-      intervalId = window.setInterval(() => {
-        if (window.google?.accounts?.id) {
-          renderButton();
-          if (intervalId) window.clearInterval(intervalId);
-        }
-      }, 300);
-    }
-
-    return () => {
-      if (intervalId) window.clearInterval(intervalId);
-    };
-  }, [googleClientId, navigate, toast]);
+  const handleGoogleRedirect = () => {
+    window.location.href = `${API_BASE_URL.replace(/\/api$/, '')}/auth/google`;
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -199,10 +142,9 @@ const Login = () => {
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          {/* Google Sign In */}
-          <div className="w-full mb-3 flex justify-center">
-            <div ref={googleButtonRef} className={isGoogleLoading ? 'pointer-events-none opacity-70' : ''} />
-          </div>
+          <Button type="button" variant="outline" size="lg" className="w-full" onClick={handleGoogleRedirect}>
+            Continue with Google
+          </Button>
 
           {/* Register Link */}
           <p className="text-center text-muted-foreground">
