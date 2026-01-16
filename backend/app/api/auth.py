@@ -78,10 +78,11 @@ def _get_google_oauth_config() -> Tuple[str, str, str]:
 
 
 def _get_frontend_url() -> str:
-    frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+    frontend_url = os.getenv("FRONTEND_URL", "https://tradsense-puce.vercel.app").strip()
+    print("FRONTEND_URL =", os.getenv("FRONTEND_URL"))
     if not frontend_url:
-        logger.error("Frontend URL missing: FRONTEND_URL")
-        raise HTTPException(status_code=500, detail="Frontend URL is not configured")
+        logger.warning("Frontend URL missing: FRONTEND_URL; using fallback")
+        frontend_url = "https://tradsense-puce.vercel.app"
     return frontend_url.rstrip("/")
 
 
