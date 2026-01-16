@@ -259,7 +259,7 @@ def google_oauth_callback(
             raise HTTPException(status_code=401, detail="Google account email is not verified")
         auth_payload = _auth_user_from_google(db, idinfo)
         frontend_url = _get_frontend_url()
-        response = RedirectResponse(url=f"{frontend_url}/")
+        response = RedirectResponse(url=f"{frontend_url}/dashboard")
         response.set_cookie(
             key="auth_token",
             value=auth_payload["access_token"],
