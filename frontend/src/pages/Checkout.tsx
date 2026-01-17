@@ -117,6 +117,8 @@ const Checkout = () => {
                 body: JSON.stringify({
                   user_id: userId,
                   challenge_id: selectedChallenge.id,
+                  amount: Number(selectedChallenge.price_dh || 0).toFixed(2),
+                  currency: (paypalConfig?.currency_code || envPayPalCurrency || 'USD').toUpperCase(),
                 }),
               });
               const data = await res.json().catch(() => ({}));
