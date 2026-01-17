@@ -171,8 +171,8 @@ class AdminPasswordResetRequest(BaseModel):
 class PayPalOrderRequest(BaseModel):
     user_id: int
     challenge_id: int
-    amount: str
-    currency: str
+    amount: Optional[str] = None
+    currency: Optional[str] = None
 
 
 class PayPalCaptureRequest(BaseModel):
@@ -1443,21 +1443,31 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
     client_id = env_client_id or (config.client_id if config else "")
     client_secret = env_client_secret or (config.client_secret if config else "")
     mode = env_mode or (config.mode if config else "sandbox")
-    currency_code = payload.currency.strip().upper()
+    currency_code = (
+        payload.currency.strip().upper()
+        if payload.currency and payload.currency.strip()
+        else (env_currency or (config.currency_code if config else "USD")).upper()
+    )
     if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail="PayPal not configured")
 
     if currency_code not in {"USD", "EUR"}:
-        logger.error("Invalid PayPal currency received: %s", currency_code)
-        raise HTTPException(status_code=400, detail="Invalid PayPal currency")
+        logger.warning("Invalid PayPal currency received: %s; defaulting to USD", currency_code)
+        currency_code = "USD"
 
-    try:
-        amount_decimal = Decimal(payload.amount.strip())
-    except (InvalidOperation, AttributeError):
-        logger.error("Invalid PayPal amount received: %s", payload.amount)
-        raise HTTPException(status_code=400, detail="Invalid PayPal amount")
+    amount_decimal: Optional[Decimal] = None
+    if payload.amount and payload.amount.strip():
+        try:
+            amount_decimal = Decimal(payload.amount.strip())
+        except (InvalidOperation, AttributeError):
+            logger.warning("Invalid PayPal amount received: %s; falling back to challenge price", payload.amount)
+            amount_decimal = None
+    if amount_decimal is None:
+        if challenge.price_dh is None:
+            raise HTTPException(status_code=400, detail="Invalid PayPal amount")
+        amount_decimal = Decimal(str(challenge.price_dh))
     if amount_decimal <= 0:
-        logger.error("Non-positive PayPal amount received: %s", payload.amount)
+        logger.error("Non-positive PayPal amount resolved: %s", amount_decimal)
         raise HTTPException(status_code=400, detail="Invalid PayPal amount")
     amount_value = amount_decimal.quantize(Decimal("0.01"))
 
