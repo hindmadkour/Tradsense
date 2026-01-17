@@ -8,7 +8,7 @@ import hmac
 import json
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from fastapi.responses import StreamingResponse
@@ -87,7 +87,7 @@ def _resolve_range(range_label: str, date_from: Optional[str], date_to: Optional
     if start or end:
         return start, end
     label = (range_label or "7d").lower()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if label == "today":
         return now.replace(hour=0, minute=0, second=0, microsecond=0), now
     if label == "30d":
@@ -1151,7 +1151,7 @@ def admin_reply_contact_message(
         raise HTTPException(status_code=400, detail="Reply is too long")
     message.reply_message = reply_text
     message.replied_by = admin_user.email
-    message.replied_at = datetime.utcnow()
+    message.replied_at = datetime.now(timezone.utc)
     message.status = (payload.status or "replied").lower().strip()
     db.add(message)
     db.commit()
@@ -1356,7 +1356,7 @@ def admin_update_withdrawal(
 
     withdrawal.status = status_value
     if status_value in {"approved", "rejected", "paid"}:
-        withdrawal.processed_at = datetime.utcnow()
+        withdrawal.processed_at = datetime.now(timezone.utc)
     db.add(models.AdminActionLog(action="withdrawal_update", details=f"Withdrawal {withdrawal_id} -> {status_value}"))
     db.commit()
     db.refresh(withdrawal)
