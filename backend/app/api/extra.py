@@ -170,6 +170,8 @@ class AdminPasswordResetRequest(BaseModel):
 class PayPalOrderRequest(BaseModel):
     user_id: int
     challenge_id: int
+    amount: Optional[float] = None
+    currency: Optional[str] = None
 
 
 class PayPalCaptureRequest(BaseModel):
@@ -1395,7 +1397,8 @@ def _get_paypal_env() -> Tuple[str, str, str, str]:
     # Read PayPal credentials from environment to avoid hard-coded secrets.
     client_id = os.environ.get("PAYPAL_CLIENT_ID", "").strip()
     client_secret = os.environ.get("PAYPAL_CLIENT_SECRET", "").strip()
-    mode = os.environ.get("PAYPAL_MODE", "").strip()
+    # Support PAYPAL_ENV while keeping backward compatibility with PAYPAL_MODE.
+    mode = os.environ.get("PAYPAL_ENV", "").strip() or os.environ.get("PAYPAL_MODE", "").strip()
     currency_code = os.environ.get("PAYPAL_CURRENCY", "").strip()
     return client_id, client_secret, mode, currency_code
 
@@ -1425,11 +1428,19 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
     client_id = env_client_id or (config.client_id if config else "")
     client_secret = env_client_secret or (config.client_secret if config else "")
     mode = env_mode or (config.mode if config else "sandbox")
-    currency_code = env_currency or (config.currency_code if config else "USD")
+    currency_code = (payload.currency or env_currency or (config.currency_code if config else "USD")).upper()
     if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail="PayPal not configured")
 
-    base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+    if currency_code not in {"USD", "EUR"}:
+        logger.warning("Invalid PayPal currency '%s' requested; defaulting to USD", currency_code)
+        currency_code = "USD"
+
+    amount_value = payload.amount if payload.amount is not None else challenge.price_dh
+    if amount_value is None or amount_value <= 0:
+        raise HTTPException(status_code=400, detail="Invalid PayPal amount")
+
+    base_url = "https://api-m.sandbox.paypal.com" if mode.lower() == "sandbox" else "https://api-m.paypal.com"
     auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
     token_res = requests.post(
         f"{base_url}/v1/oauth2/token",
@@ -1447,31 +1458,37 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         logger.error("PayPal token response missing access_token: body=%s", token_res.text)
         raise HTTPException(status_code=400, detail="Failed to get PayPal token")
 
+    order_payload = {
+        "intent": "CAPTURE",
+        "purchase_units": [
+            {
+                "reference_id": str(payload.challenge_id),
+                "amount": {
+                    "currency_code": currency_code,
+                    "value": f"{amount_value:.2f}",
+                },
+            }
+        ],
+    }
+    logger.info("PayPal create-order payload: currency=%s amount=%s", currency_code, f"{amount_value:.2f}")
     order_res = requests.post(
         f"{base_url}/v2/checkout/orders",
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {access_token}",
         },
-        json={
-            "intent": "CAPTURE",
-            "purchase_units": [
-                {
-                    "reference_id": str(payload.challenge_id),
-                    "amount": {
-                        "currency_code": currency_code,
-                        "value": str(challenge.price_dh),
-                    },
-                }
-            ],
-        },
+        json=order_payload,
         timeout=10,
     )
     if order_res.status_code not in (200, 201):
         # Log PayPal order error details to resolve 400s during create-order.
         logger.error("PayPal order create failed: status=%s body=%s", order_res.status_code, order_res.text)
         raise HTTPException(status_code=400, detail="Failed to create PayPal order")
-    return order_res.json()
+    order_id = order_res.json().get("id")
+    if not order_id:
+        logger.error("PayPal order response missing id: body=%s", order_res.text)
+        raise HTTPException(status_code=400, detail="Failed to create PayPal order")
+    return {"id": order_id}
 
 
 @router.post("/paypal/capture-order")
