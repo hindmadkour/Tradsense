@@ -22,13 +22,21 @@ type Challenge = {
 
 const loadPayPalScript = (clientId: string, currencyCode: string) =>
   new Promise<void>((resolve, reject) => {
-    const existing = document.getElementById('paypal-sdk');
+    const existing = document.getElementById('paypal-sdk') as HTMLScriptElement | null;
     if (existing) {
-      resolve();
-      return;
+      const existingClientId = existing.getAttribute('data-client-id');
+      const existingCurrency = existing.getAttribute('data-currency');
+      // Reload the SDK when the Client ID or currency changes to avoid stale PayPal config.
+      if (existingClientId === clientId && existingCurrency === currencyCode) {
+        resolve();
+        return;
+      }
+      existing.remove();
     }
     const script = document.createElement('script');
     script.id = 'paypal-sdk';
+    script.setAttribute('data-client-id', clientId);
+    script.setAttribute('data-currency', currencyCode);
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currencyCode}`;
     script.async = true;
     script.onload = () => resolve();
@@ -47,6 +55,9 @@ const Checkout = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const userId = getCurrentUserId();
+  // Read the PayPal Client ID from Vite env to keep secrets off the frontend.
+  const envPayPalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+  const envPayPalCurrency = import.meta.env.VITE_PAYPAL_CURRENCY || 'USD';
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -63,6 +74,10 @@ const Checkout = () => {
 
   useEffect(() => {
     const fetchPayPalConfig = async () => {
+      if (envPayPalClientId) {
+        setPaypalConfig({ client_id: envPayPalClientId, currency_code: envPayPalCurrency });
+        return;
+      }
       try {
         const res = await fetch(`${API_BASE_URL}/paypal/config/public`);
         if (!res.ok) {
@@ -75,7 +90,7 @@ const Checkout = () => {
       }
     };
     fetchPayPalConfig();
-  }, []);
+  }, [envPayPalClientId, envPayPalCurrency]);
 
   const selectedChallenge = useMemo(() => {
     if (!challenges.length) return null;

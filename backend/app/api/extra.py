@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
+import logging
 import asyncio
 import base64
 import hashlib
@@ -31,6 +32,7 @@ except Exception:
 
 
 router = APIRouter(prefix="/api", tags=["Extras"])
+logger = logging.getLogger(__name__)
 
 
 def require_admin(
@@ -1389,14 +1391,24 @@ def paypal_config(
     db.commit()
     return {"status": "saved"}
 
+def _get_paypal_env() -> Tuple[str, str, str, str]:
+    # Read PayPal credentials from environment to avoid hard-coded secrets.
+    client_id = os.environ.get("PAYPAL_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("PAYPAL_CLIENT_SECRET", "").strip()
+    mode = os.environ.get("PAYPAL_MODE", "").strip()
+    currency_code = os.environ.get("PAYPAL_CURRENCY", "").strip()
+    return client_id, client_secret, mode, currency_code
+
 
 @router.get("/paypal/config/public")
-def paypal_public_config() -> Dict[str, Any]:
-    client_id = os.environ.get("PAYPAL_CLIENT_ID", "").strip()
-    if not client_id:
+def paypal_public_config(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    env_client_id, _, _, env_currency = _get_paypal_env()
+    if env_client_id:
+        return {"client_id": env_client_id, "currency_code": env_currency or "USD"}
+    config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
+    if config is None:
         raise HTTPException(status_code=503, detail="PAYPAL_CLIENT_ID is not configured")
-    currency_code = os.environ.get("PAYPAL_CURRENCY", "USD").strip() or "USD"
-    return {"client_id": client_id, "currency_code": currency_code}
+    return {"client_id": config.client_id, "currency_code": config.currency_code}
 
 
 @router.post("/paypal/create-order")
@@ -1408,11 +1420,17 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Challenge not found")
 
     config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
-    if config is None:
+    env_client_id, env_client_secret, env_mode, env_currency = _get_paypal_env()
+    # Prefer environment configuration for Render deployments and secure secret handling.
+    client_id = env_client_id or (config.client_id if config else "")
+    client_secret = env_client_secret or (config.client_secret if config else "")
+    mode = env_mode or (config.mode if config else "sandbox")
+    currency_code = env_currency or (config.currency_code if config else "USD")
+    if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail="PayPal not configured")
 
-    base_url = "https://api-m.sandbox.paypal.com" if config.mode == "sandbox" else "https://api-m.paypal.com"
-    auth = base64.b64encode(f"{config.client_id}:{config.client_secret}".encode()).decode()
+    base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+    auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
     token_res = requests.post(
         f"{base_url}/v1/oauth2/token",
         headers={"Authorization": f"Basic {auth}"},
@@ -1420,8 +1438,14 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         timeout=10,
     )
     if token_res.status_code != 200:
+        # Log PayPal auth response to diagnose sandbox credential issues without exposing secrets.
+        logger.error("PayPal token request failed: status=%s body=%s", token_res.status_code, token_res.text)
         raise HTTPException(status_code=400, detail="Failed to get PayPal token")
     access_token = token_res.json().get("access_token")
+    if not access_token:
+        # Log missing access token to surface unexpected PayPal responses.
+        logger.error("PayPal token response missing access_token: body=%s", token_res.text)
+        raise HTTPException(status_code=400, detail="Failed to get PayPal token")
 
     order_res = requests.post(
         f"{base_url}/v2/checkout/orders",
@@ -1435,7 +1459,7 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
                 {
                     "reference_id": str(payload.challenge_id),
                     "amount": {
-                        "currency_code": config.currency_code,
+                        "currency_code": currency_code,
                         "value": str(challenge.price_dh),
                     },
                 }
@@ -1444,6 +1468,8 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         timeout=10,
     )
     if order_res.status_code not in (200, 201):
+        # Log PayPal order error details to resolve 400s during create-order.
+        logger.error("PayPal order create failed: status=%s body=%s", order_res.status_code, order_res.text)
         raise HTTPException(status_code=400, detail="Failed to create PayPal order")
     return order_res.json()
 
@@ -1454,11 +1480,16 @@ def paypal_capture_order(payload: PayPalCaptureRequest, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail="requests is not installed")
 
     config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
-    if config is None:
+    env_client_id, env_client_secret, env_mode, _ = _get_paypal_env()
+    # Prefer environment configuration for Render deployments and secure secret handling.
+    client_id = env_client_id or (config.client_id if config else "")
+    client_secret = env_client_secret or (config.client_secret if config else "")
+    mode = env_mode or (config.mode if config else "sandbox")
+    if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail="PayPal not configured")
 
-    base_url = "https://api-m.sandbox.paypal.com" if config.mode == "sandbox" else "https://api-m.paypal.com"
-    auth = base64.b64encode(f"{config.client_id}:{config.client_secret}".encode()).decode()
+    base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+    auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
     token_res = requests.post(
         f"{base_url}/v1/oauth2/token",
         headers={"Authorization": f"Basic {auth}"},
@@ -1466,8 +1497,14 @@ def paypal_capture_order(payload: PayPalCaptureRequest, db: Session = Depends(ge
         timeout=10,
     )
     if token_res.status_code != 200:
+        # Log PayPal auth response to diagnose sandbox credential issues without exposing secrets.
+        logger.error("PayPal token request failed: status=%s body=%s", token_res.status_code, token_res.text)
         raise HTTPException(status_code=400, detail="Failed to get PayPal token")
     access_token = token_res.json().get("access_token")
+    if not access_token:
+        # Log missing access token to surface unexpected PayPal responses.
+        logger.error("PayPal token response missing access_token: body=%s", token_res.text)
+        raise HTTPException(status_code=400, detail="Failed to get PayPal token")
 
     capture_res = requests.post(
         f"{base_url}/v2/checkout/orders/{payload.order_id}/capture",
@@ -1478,6 +1515,8 @@ def paypal_capture_order(payload: PayPalCaptureRequest, db: Session = Depends(ge
         timeout=10,
     )
     if capture_res.status_code not in (200, 201):
+        # Log PayPal capture error details to debug failed approvals.
+        logger.error("PayPal order capture failed: status=%s body=%s", capture_res.status_code, capture_res.text)
         raise HTTPException(status_code=400, detail="Failed to capture PayPal order")
 
     activation = _activate_challenge(

@@ -57,6 +57,8 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 frontend_url = os.environ.get("FRONTEND_URL", "").strip()
 allow_origins = [frontend_url] if frontend_url else ["https://tradsense-puce.vercel.app"]
+# Allow local dev frontends to reach the API without CORS failures.
+allow_origins.extend(["http://localhost:8080", "http://localhost:5173"])
 
 app.add_middleware(
     CORSMiddleware,

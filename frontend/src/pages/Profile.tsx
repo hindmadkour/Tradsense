@@ -342,23 +342,26 @@ const Profile = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 max-w-6xl">
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{t('profile_title')}</h1>
-            <p className="text-muted-foreground">{t('profile_subtitle')}</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-border/60 bg-secondary/40 px-4 py-2 text-xs text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-[#7b1e2b]" />
-            Trader profile active
+      <div className="relative space-y-8 max-w-6xl">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_10%_0%,rgba(56,189,248,0.12),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.08),transparent_40%),radial-gradient(circle_at_50%_80%,rgba(14,116,144,0.12),transparent_45%)] dark:bg-[radial-gradient(circle_at_10%_0%,rgba(56,189,248,0.12),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(34,197,94,0.08),transparent_40%),radial-gradient(circle_at_50%_80%,rgba(14,116,144,0.12),transparent_45%)]" />
+
+        <div className="surface-card p-5 rounded-3xl border border-border/60 bg-gradient-to-r from-background via-background to-background">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.35em] text-muted-foreground">{t('dashboard')}</div>
+              <h1 className="text-2xl font-bold">{t('profile_title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('profile_subtitle')}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-border/60 bg-secondary/50 px-4 py-2 text-xs text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              Trader profile active
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
           <div className="space-y-6">
-            {/* Avatar Section */}
-            <div className="surface-card p-6 bg-gradient-to-br from-primary/10 via-background to-background">
+            <div className="surface-card p-6 rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-background">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold">{t('profile_photo')}</h2>
@@ -366,24 +369,36 @@ const Profile = () => {
                 </div>
                 <button
                   onClick={handleAvatarUpload}
-                  className="h-9 w-9 rounded-full border border-border/60 bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors"
+                  className="h-9 w-9 rounded-full border border-border/60 bg-secondary/60 flex items-center justify-center hover:border-cyan-400/40 transition-colors"
                 >
                   <Camera className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-              <div className="mt-6 flex flex-col items-center text-center">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-[#7b1e2b] flex items-center justify-center overflow-hidden shadow-lg">
-                    {avatarData ? (
-                      <img src={avatarData} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-10 h-10 text-white" />
-                    )}
+              <div className="mt-6 flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 via-sky-500 to-emerald-400 flex items-center justify-center overflow-hidden shadow-[0_14px_30px_-18px_rgba(56,189,248,0.9)]">
+                      {avatarData ? (
+                        <img src={avatarData} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-10 h-10 text-white" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-lg font-semibold">{profileData.fullName}</p>
+                    <p className="text-xs text-muted-foreground">{profileData.email}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-border/60 bg-secondary/60 px-3 py-1 text-xs text-muted-foreground">
+                    {profileData.country || t('profile_country')}
+                  </span>
+                  <span className="rounded-full border border-border/60 bg-secondary/60 px-3 py-1 text-xs text-muted-foreground">
+                    {profileData.phone || t('profile_phone')}
+                  </span>
+                </div>
                   </div>
                 </div>
-                <p className="mt-4 font-semibold">{profileData.fullName}</p>
-                <p className="text-xs text-muted-foreground">{profileData.email}</p>
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={handleAvatarUpload}>
                     {t('profile_upload_photo')}
                   </Button>
@@ -406,22 +421,19 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Preferences */}
-            <div className="surface-card p-6">
+            <div className="surface-card p-6 rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-background">
               <h2 className="text-lg font-semibold mb-4">{t('profile_preferences')}</h2>
-              
-              {/* Language Selection */}
               <div className="mb-6">
                 <Label className="mb-3 block">{t('profile_language')}</Label>
-                <div className="flex gap-2 flex-wrap">
+                <div className="grid grid-cols-2 gap-2">
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
                         selectedLanguage === lang.code
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-cyan-400/60 bg-cyan-400/10 text-cyan-600 dark:text-cyan-200'
+                          : 'border-border/60 bg-secondary/60 hover:border-cyan-400/40'
                       }`}
                     >
                       <span className="text-lg">{lang.flag}</span>
@@ -430,11 +442,9 @@ const Profile = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+              <div className="flex items-center justify-between p-4 rounded-2xl border border-border/60 bg-secondary/60">
                 <div className="flex items-center gap-3">
-                  {darkMode ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-warning" />}
+                  {darkMode ? <Moon className="w-5 h-5 text-cyan-300" /> : <Sun className="w-5 h-5 text-warning" />}
                   <div>
                     <p className="font-medium">{t('profile_dark_mode')}</p>
                     <p className="text-sm text-muted-foreground">{t('profile_dark_mode_desc')}</p>
@@ -449,19 +459,23 @@ const Profile = () => {
           </div>
 
           <div className="space-y-6">
-            {/* Personal Information */}
-            <div className="surface-card p-6">
+            <div className="surface-card p-6 rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-background">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-lg font-semibold">{t('profile_personal_info')}</h2>
                   <p className="text-xs text-muted-foreground">Keep your trader identity up to date.</p>
                 </div>
-                <Button variant="hero" size="sm" onClick={handleProfileSave}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleProfileSave}
+                  className="bg-gradient-to-r from-cyan-500 via-sky-500 to-emerald-400 text-white hover:opacity-90"
+                >
                   <Save className="w-4 h-4 mr-2" />
                   {t('profile_save_changes')}
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">{t('profile_full_name')}</Label>
                   <div className="relative">
@@ -470,7 +484,7 @@ const Profile = () => {
                       id="fullName"
                       value={profileData.fullName}
                       onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                      className="pl-10 bg-secondary border-border"
+                      className="pl-10 bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                     />
                   </div>
                 </div>
@@ -483,7 +497,7 @@ const Profile = () => {
                       type="email"
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="pl-10 bg-secondary border-border"
+                      className="pl-10 bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                     />
                   </div>
                 </div>
@@ -493,7 +507,7 @@ const Profile = () => {
                     id="phone"
                     value={profileData.phone}
                     onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    className="bg-secondary border-border"
+                    className="bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -502,20 +516,19 @@ const Profile = () => {
                     id="country"
                     value={profileData.country}
                     onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
-                    className="bg-secondary border-border"
+                    className="bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Change Password */}
-            <div className="surface-card p-6">
+            <div className="surface-card p-6 rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-background">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-lg font-semibold">{t('profile_change_password')}</h2>
                   <p className="text-xs text-muted-foreground">Use a strong password to keep your account safe.</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handlePasswordChange}>
+                <Button variant="outline" size="sm" onClick={handlePasswordChange} className="border-border/60">
                   {t('profile_update_password')}
                 </Button>
               </div>
@@ -529,7 +542,7 @@ const Profile = () => {
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                      className="pl-10 pr-10 bg-secondary border-border"
+                      className="pl-10 pr-10 bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                       placeholder="••••••••"
                     />
                     <button
@@ -550,7 +563,7 @@ const Profile = () => {
                       type={showNewPassword ? 'text' : 'password'}
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      className="pl-10 pr-10 bg-secondary border-border"
+                      className="pl-10 pr-10 bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                       placeholder="••••••••"
                     />
                     <button
@@ -571,7 +584,7 @@ const Profile = () => {
                       type="password"
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      className="pl-10 bg-secondary border-border"
+                      className="pl-10 bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
                       placeholder="••••••••"
                     />
                   </div>
@@ -581,92 +594,103 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Support Replies */}
-        <div className="surface-card p-6">
+        <div className="surface-card p-6 rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-background">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Support Replies</h2>
-            <Button variant="outline" size="sm" onClick={() => fetchContactReplies(profileData.email)}>
+            <Button variant="outline" size="sm" onClick={() => fetchContactReplies(profileData.email)} className="border-border/60">
               Refresh
             </Button>
           </div>
-          <form onSubmit={handleSupportSubmit} className="mb-5 space-y-3 rounded-lg border border-border/60 bg-secondary/40 p-4">
-            <div>
-              <Label htmlFor="support-subject" className="text-xs">
-                Envoyer un message to support
-              </Label>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="support-name">Name</Label>
-                <Input
-                  id="support-name"
-                  value={profileData.fullName}
-                  readOnly
-                />
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <form onSubmit={handleSupportSubmit} className="space-y-3 rounded-2xl border border-border/60 bg-secondary/60 p-4">
+              <div>
+                <Label htmlFor="support-subject" className="text-xs">
+                  Envoyer un message au support
+                </Label>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="support-email">Email</Label>
-                <Input
-                  id="support-email"
-                  type="email"
-                  value={profileData.email}
-                  readOnly
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="support-subject-input">Subject</Label>
-              <Input
-                id="support-subject-input"
-                value={supportForm.subject}
-                onChange={updateSupportField('subject')}
-                placeholder="How can we help?"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="support-message">Message</Label>
-              <Textarea
-                id="support-message"
-                value={supportForm.message}
-                onChange={updateSupportField('message')}
-                placeholder="Describe your issue..."
-                rows={4}
-              />
-            </div>
-            <Button type="submit" variant="hero" disabled={supportSending}>
-              {supportSending ? 'Sending...' : 'Send message'}
-            </Button>
-          </form>
-          {contactRepliesLoading ? (
-            <div className="text-sm text-muted-foreground">Loading replies...</div>
-          ) : contactReplies.length ? (
-            <div className="space-y-3">
-              {contactReplies.map((reply) => (
-                <div key={reply.id} className="rounded-lg border border-border/60 bg-secondary/40 p-3 text-xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="font-semibold">{reply.subject || 'Support'}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {reply.replied_at ? new Date(reply.replied_at).toLocaleString() : '—'}
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    Your message: {reply.message}
-                  </div>
-                  <div className="mt-2 rounded-md border border-border/60 bg-background/60 p-2">
-                    <div className="text-[11px] text-muted-foreground mb-1">Admin reply</div>
-                    <p className="text-muted-foreground">{reply.reply_message}</p>
-                  </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="support-name">Name</Label>
+                  <Input
+                    id="support-name"
+                    value={profileData.fullName}
+                    readOnly
+                  className="bg-secondary/60 border-border/60"
+                  />
                 </div>
-              ))}
+                <div className="space-y-2">
+                  <Label htmlFor="support-email">Email</Label>
+                  <Input
+                    id="support-email"
+                    type="email"
+                    value={profileData.email}
+                    readOnly
+                  className="bg-secondary/60 border-border/60"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="support-subject-input">Subject</Label>
+                <Input
+                  id="support-subject-input"
+                  value={supportForm.subject}
+                  onChange={updateSupportField('subject')}
+                  placeholder="How can we help?"
+                className="bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="support-message">Message</Label>
+                <Textarea
+                  id="support-message"
+                  value={supportForm.message}
+                  onChange={updateSupportField('message')}
+                  placeholder="Describe your issue..."
+                  rows={4}
+                className="bg-secondary/60 border-border/60 focus-visible:ring-cyan-400/20 focus-visible:border-cyan-400/50"
+                />
+              </div>
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={supportSending}
+                className="bg-gradient-to-r from-cyan-500 via-sky-500 to-emerald-400 text-white hover:opacity-90"
+              >
+                {supportSending ? 'Sending...' : 'Send message'}
+              </Button>
+            </form>
+            <div className="rounded-2xl border border-border/60 bg-secondary/60 p-4">
+              {contactRepliesLoading ? (
+                <div className="text-sm text-muted-foreground">Loading replies...</div>
+              ) : contactReplies.length ? (
+                <div className="space-y-3">
+                  {contactReplies.map((reply) => (
+                    <div key={reply.id} className="rounded-2xl border border-border/60 bg-background/60 p-3 text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-semibold">{reply.subject || 'Support'}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {reply.replied_at ? new Date(reply.replied_at).toLocaleString() : '—'}
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        Your message: {reply.message}
+                      </div>
+                      <div className="mt-2 rounded-md border border-border/60 bg-secondary/60 p-2">
+                        <div className="text-[11px] text-muted-foreground mb-1">Admin reply</div>
+                        <p className="text-muted-foreground">{reply.reply_message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No replies yet.</div>
+              )}
             </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">No replies yet.</div>
-          )}
+          </div>
         </div>
 
-        {/* Danger Zone */}
-        <div className="surface-card p-6 border-destructive/20">
-          <h2 className="text-lg font-semibold text-destructive mb-4">{t('profile_danger_zone')}</h2>
+        <div className="surface-card p-6 rounded-3xl border border-rose-500/20 bg-gradient-to-br from-[#1a0f14] via-[#120a10] to-[#0b111a]">
+          <h2 className="text-lg font-semibold text-rose-400 mb-4">{t('profile_danger_zone')}</h2>
           <p className="text-sm text-muted-foreground mb-4">
             {t('profile_delete_warning')}
           </p>

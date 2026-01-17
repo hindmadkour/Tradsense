@@ -11,6 +11,7 @@ from services.payment_service import PaymentService
 from services.market_scraper_casablanca import scrape_casablanca_live_overview
 import base64
 import json
+import os
 import time
 
 try:
@@ -43,6 +44,13 @@ def activate_challenge(user_id, challenge_id, payment_method):
     db.session.add(new_account)
     db.session.commit()
     return new_account, {"status": "success", "account_id": new_account.id}
+
+def _get_paypal_env():
+    client_id = os.environ.get("PAYPAL_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("PAYPAL_CLIENT_SECRET", "").strip()
+    mode = os.environ.get("PAYPAL_MODE", "").strip()
+    currency_code = os.environ.get("PAYPAL_CURRENCY", "").strip()
+    return client_id, client_secret, mode, currency_code
 
 class MarketDataCasablancaResource(Resource):
     def get(self):
@@ -234,6 +242,9 @@ class PayPalConfigResource(Resource):
 
 class PayPalPublicConfigResource(Resource):
     def get(self):
+        client_id, _, _, currency_code = _get_paypal_env()
+        if client_id:
+            return {"client_id": client_id, "currency_code": currency_code or "USD"}
         config = PayPalConfig.query.order_by(PayPalConfig.created_at.desc()).first()
         if not config:
             return {"error": "PayPal not configured"}, 404
@@ -251,11 +262,16 @@ class PayPalCreateOrder(Resource):
             return {"error": "Challenge not found"}, 404
 
         config = PayPalConfig.query.order_by(PayPalConfig.created_at.desc()).first()
-        if not config:
+        env_client_id, env_client_secret, env_mode, env_currency = _get_paypal_env()
+        client_id = env_client_id or (config.client_id if config else "")
+        client_secret = env_client_secret or (config.client_secret if config else "")
+        mode = env_mode or (config.mode if config else "sandbox")
+        currency_code = env_currency or (config.currency_code if config else "USD")
+        if not client_id or not client_secret:
             return {"error": "PayPal not configured"}, 400
 
-        base_url = "https://api-m.sandbox.paypal.com" if config.mode == 'sandbox' else "https://api-m.paypal.com"
-        auth = base64.b64encode(f"{config.client_id}:{config.client_secret}".encode()).decode()
+        base_url = "https://api-m.sandbox.paypal.com" if mode == 'sandbox' else "https://api-m.paypal.com"
+        auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
         token_res = requests.post(
             f"{base_url}/v1/oauth2/token",
             headers={"Authorization": f"Basic {auth}"},
@@ -277,7 +293,7 @@ class PayPalCreateOrder(Resource):
                 "purchase_units": [{
                     "reference_id": str(challenge_id),
                     "amount": {
-                        "currency_code": config.currency_code,
+                        "currency_code": currency_code,
                         "value": str(challenge.price_dh)
                     }
                 }]
@@ -300,11 +316,15 @@ class PayPalCaptureOrder(Resource):
             return {"error": "Missing order id"}, 400
 
         config = PayPalConfig.query.order_by(PayPalConfig.created_at.desc()).first()
-        if not config:
+        env_client_id, env_client_secret, env_mode, _ = _get_paypal_env()
+        client_id = env_client_id or (config.client_id if config else "")
+        client_secret = env_client_secret or (config.client_secret if config else "")
+        mode = env_mode or (config.mode if config else "sandbox")
+        if not client_id or not client_secret:
             return {"error": "PayPal not configured"}, 400
 
-        base_url = "https://api-m.sandbox.paypal.com" if config.mode == 'sandbox' else "https://api-m.paypal.com"
-        auth = base64.b64encode(f"{config.client_id}:{config.client_secret}".encode()).decode()
+        base_url = "https://api-m.sandbox.paypal.com" if mode == 'sandbox' else "https://api-m.paypal.com"
+        auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
         token_res = requests.post(
             f"{base_url}/v1/oauth2/token",
             headers={"Authorization": f"Basic {auth}"},

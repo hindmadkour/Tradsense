@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { ShieldCheck, Sparkles, TrendingUp, Zap } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -7,16 +7,30 @@ import GlassCard from "@/components/ui/GlassCard";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import TickerTape from "@/components/ui/TickerTape";
 import SkeletonBlock from "@/components/ui/SkeletonBlock";
+import { usePortfolio } from "@/lib/api";
+import { getCurrentUserId } from "@/lib/auth";
 
-const equityData = [
-  { name: "Mon", value: 9820 },
-  { name: "Tue", value: 10140 },
-  { name: "Wed", value: 10020 },
-  { name: "Thu", value: 10480 },
-  { name: "Fri", value: 10780 },
-  { name: "Sat", value: 10620 },
-  { name: "Sun", value: 10940 },
-];
+const buildEquitySeries = (initialValue: number, trades: Array<{ profit?: number; timestamp?: string }>) => {
+  const dailyProfit: Record<string, number> = {};
+  trades.forEach((trade) => {
+    if (!trade.timestamp) return;
+    const key = new Date(trade.timestamp).toISOString().slice(0, 10);
+    dailyProfit[key] = (dailyProfit[key] || 0) + (trade.profit || 0);
+  });
+  const series: Array<{ name: string; value: number }> = [];
+  let running = initialValue;
+  for (let i = 6; i >= 0; i -= 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().slice(0, 10);
+    running += dailyProfit[key] || 0;
+    series.push({
+      name: date.toLocaleDateString("en-US", { weekday: "short" }),
+      value: Math.max(0, Math.round(running)),
+    });
+  }
+  return series;
+};
 
 const momentumData = [
   { name: "09:00", value: 62 },
@@ -53,12 +67,44 @@ const confidenceWidth = (value: number) => {
 };
 
 const Dashboard = () => {
+  const userId = getCurrentUserId();
+  const { portfolio, isLoading, isFetching } = usePortfolio(userId);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!isLoading) {
+      setLoading(false);
+    }
+  }, [isLoading]);
+
+  const account = portfolio?.account;
+  const trades = portfolio?.trades || [];
+  const dailyStartEquity = account?.daily_starting_equity ?? account?.equity ?? 0;
+  const initialBalance = account?.initial_balance ?? account?.equity ?? 0;
+  const equityValue = account?.equity ?? 0;
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const dailyProfit = trades.reduce((sum, trade) => {
+    if (!trade.timestamp) return sum;
+    const key = new Date(trade.timestamp).toISOString().slice(0, 10);
+    if (key !== todayKey) return sum;
+    return sum + (trade.profit || 0);
+  }, 0);
+  const dailyPnlPct = dailyStartEquity ? (dailyProfit / dailyStartEquity) * 100 : 0;
+  const dailyDrawdownPct = dailyStartEquity ? Math.max(0, ((dailyStartEquity - equityValue) / dailyStartEquity) * 100) : 0;
+  const totalDrawdownPct = initialBalance ? Math.max(0, ((initialBalance - equityValue) / initialBalance) * 100) : 0;
+
+  const winRate = useMemo(() => {
+    const closed = trades.filter((trade) => trade.status === "closed" || trade.exit_price != null);
+    if (!closed.length) return 0;
+    const wins = closed.filter((trade) => (trade.profit || 0) > 0).length;
+    return (wins / closed.length) * 100;
+  }, [trades]);
+
+  const equityData = useMemo(() => {
+    if (!account) return [];
+    return buildEquitySeries(initialBalance || equityValue, trades);
+  }, [account, initialBalance, equityValue, trades]);
 
   return (
     <PageTransition>
@@ -68,14 +114,14 @@ const Dashboard = () => {
 
           <div className="grid gap-4 lg:grid-cols-4">
             {[
-              { label: "Equity", value: 10940, format: (val: number) => `$${val.toFixed(0)}` },
-              { label: "Daily PnL", value: 4.7, format: (val: number) => `${val.toFixed(1)}%` },
-              { label: "Drawdown", value: 2.1, format: (val: number) => `${val.toFixed(1)}%` },
-              { label: "Win Rate", value: 62, format: (val: number) => `${val.toFixed(0)}%` },
+              { label: "Equity", value: equityValue || 0, format: (val: number) => `$${val.toFixed(0)}` },
+              { label: "Daily PnL", value: dailyPnlPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
+              { label: "Drawdown", value: dailyDrawdownPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
+              { label: "Win Rate", value: winRate || 0, format: (val: number) => `${val.toFixed(0)}%` },
             ].map((stat) => (
               <GlassCard key={stat.label} className="p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</div>
-                {loading ? (
+                {loading || isFetching ? (
                   <SkeletonBlock className="mt-3 h-8 w-24" />
                 ) : (
                   <AnimatedNumber value={stat.value} format={stat.format} className="mt-2 text-2xl font-semibold" />
@@ -94,7 +140,7 @@ const Dashboard = () => {
                 <span className="text-sm text-success">+9.4% week</span>
               </div>
               <div className="mt-6 h-64">
-                {loading ? (
+                {loading || isFetching ? (
                   <SkeletonBlock className="h-full w-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -169,17 +215,17 @@ const Dashboard = () => {
                 <div className="space-y-3 text-xs text-muted-foreground">
                   <div className="flex items-center justify-between">
                     <span>Daily drawdown</span>
-                    <span className="text-foreground">2.1% / 5%</span>
+                    <span className="text-foreground">{dailyDrawdownPct.toFixed(1)}% / 5%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-background/60">
-                    <div className="h-full w-2/5 rounded-full bg-success" />
+                    <div className="h-full rounded-full bg-success" style={{ width: `${Math.min(100, (dailyDrawdownPct / 5) * 100)}%` }} />
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Total drawdown</span>
-                    <span className="text-foreground">4.4% / 10%</span>
+                    <span className="text-foreground">{totalDrawdownPct.toFixed(1)}% / 10%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-background/60">
-                    <div className="h-full w-[44%] rounded-full bg-warning" />
+                    <div className="h-full rounded-full bg-warning" style={{ width: `${Math.min(100, (totalDrawdownPct / 10) * 100)}%` }} />
                   </div>
                 </div>
               </GlassCard>
