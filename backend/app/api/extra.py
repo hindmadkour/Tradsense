@@ -1419,12 +1419,26 @@ def paypal_public_config(db: Session = Depends(get_db)) -> Dict[str, Any]:
 def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
     if requests is None:
         raise HTTPException(status_code=500, detail="requests is not installed")
+    logger.info(
+        "PayPal create-order input: user_id=%s challenge_id=%s amount=%s currency=%s",
+        payload.user_id,
+        payload.challenge_id,
+        payload.amount,
+        payload.currency,
+    )
     challenge = db.query(models.Challenge).get(payload.challenge_id)
     if challenge is None:
         raise HTTPException(status_code=404, detail="Challenge not found")
 
     config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
     env_client_id, env_client_secret, env_mode, env_currency = _get_paypal_env()
+    logger.info(
+        "PayPal env present: client_id=%s client_secret=%s mode=%s currency=%s",
+        bool(env_client_id),
+        bool(env_client_secret),
+        env_mode or "",
+        env_currency or "",
+    )
     # Prefer environment configuration for Render deployments and secure secret handling.
     client_id = env_client_id or (config.client_id if config else "")
     client_secret = env_client_secret or (config.client_secret if config else "")
