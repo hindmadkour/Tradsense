@@ -56,15 +56,24 @@ def get_paypal_client_id():
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+frontend_urls = [
+    value.strip()
+    for value in os.environ.get("FRONTEND_URLS", "").split(",")
+    if value.strip()
+]
 allow_origins = [frontend_url] if frontend_url else ["https://tradsense-puce.vercel.app"]
+allow_origins.extend(frontend_urls)
 # Always allow the production Vercel domain even if FRONTEND_URL is set.
 allow_origins.append("https://tradsense-puce.vercel.app")
+# Allow the current Vercel preview deployment for QA.
+allow_origins.append("https://tradsense-iby8yggtl-hinds-projects-ce80b927.vercel.app")
 # Allow local dev frontends to reach the API without CORS failures.
 allow_origins.extend(["http://localhost:8080", "http://localhost:5173"])
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
+    allow_origin_regex=r"https://tradsense-.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
