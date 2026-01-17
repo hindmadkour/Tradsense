@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 import logging
+from decimal import Decimal, InvalidOperation
 import asyncio
 import base64
 import hashlib
@@ -170,8 +171,8 @@ class AdminPasswordResetRequest(BaseModel):
 class PayPalOrderRequest(BaseModel):
     user_id: int
     challenge_id: int
-    amount: Optional[float] = None
-    currency: Optional[str] = None
+    amount: str
+    currency: str
 
 
 class PayPalCaptureRequest(BaseModel):
@@ -1428,17 +1429,23 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
     client_id = env_client_id or (config.client_id if config else "")
     client_secret = env_client_secret or (config.client_secret if config else "")
     mode = env_mode or (config.mode if config else "sandbox")
-    currency_code = (payload.currency or env_currency or (config.currency_code if config else "USD")).upper()
+    currency_code = payload.currency.strip().upper()
     if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail="PayPal not configured")
 
     if currency_code not in {"USD", "EUR"}:
-        logger.warning("Invalid PayPal currency '%s' requested; defaulting to USD", currency_code)
-        currency_code = "USD"
+        logger.error("Invalid PayPal currency received: %s", currency_code)
+        raise HTTPException(status_code=400, detail="Invalid PayPal currency")
 
-    amount_value = payload.amount if payload.amount is not None else challenge.price_dh
-    if amount_value is None or amount_value <= 0:
+    try:
+        amount_decimal = Decimal(payload.amount.strip())
+    except (InvalidOperation, AttributeError):
+        logger.error("Invalid PayPal amount received: %s", payload.amount)
         raise HTTPException(status_code=400, detail="Invalid PayPal amount")
+    if amount_decimal <= 0:
+        logger.error("Non-positive PayPal amount received: %s", payload.amount)
+        raise HTTPException(status_code=400, detail="Invalid PayPal amount")
+    amount_value = amount_decimal.quantize(Decimal("0.01"))
 
     base_url = "https://api-m.sandbox.paypal.com" if mode.lower() == "sandbox" else "https://api-m.paypal.com"
     auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
@@ -1470,7 +1477,7 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
             }
         ],
     }
-    logger.info("PayPal create-order payload: currency=%s amount=%s", currency_code, f"{amount_value:.2f}")
+    logger.info("PayPal create-order request: currency=%s amount=%s", currency_code, f"{amount_value:.2f}")
     order_res = requests.post(
         f"{base_url}/v2/checkout/orders",
         headers={
