@@ -1440,8 +1440,11 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         env_currency or "",
     )
     # Prefer environment configuration for Render deployments and secure secret handling.
-    client_id = env_client_id or (config.client_id if config else "")
-    client_secret = env_client_secret or (config.client_secret if config else "")
+    if (env_client_id and not env_client_secret) or (env_client_secret and not env_client_id):
+        logger.warning("PayPal env credentials are incomplete; falling back to stored config")
+    use_env_creds = bool(env_client_id and env_client_secret)
+    client_id = env_client_id if use_env_creds else (config.client_id if config else "")
+    client_secret = env_client_secret if use_env_creds else (config.client_secret if config else "")
     mode = env_mode or (config.mode if config else "sandbox")
     currency_code = (
         payload.currency.strip().upper()
@@ -1449,7 +1452,7 @@ def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_d
         else (env_currency or (config.currency_code if config else "USD")).upper()
     )
     if not client_id or not client_secret:
-        raise HTTPException(status_code=400, detail="PayPal not configured")
+        raise HTTPException(status_code=400, detail="PayPal not configured (missing client credentials)")
 
     if currency_code not in {"USD", "EUR"}:
         logger.warning("Invalid PayPal currency received: %s; defaulting to USD", currency_code)

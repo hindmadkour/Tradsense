@@ -123,7 +123,7 @@ const Checkout = () => {
               });
               const data = await res.json().catch(() => ({}));
               if (!res.ok || !data.id) {
-                throw new Error(data.error || 'Failed to create PayPal order');
+                throw new Error(data.detail || data.error || 'Failed to create PayPal order');
               }
               return data.id;
             },
