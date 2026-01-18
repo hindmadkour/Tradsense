@@ -1415,6 +1415,40 @@ def paypal_public_config(db: Session = Depends(get_db)) -> Dict[str, Any]:
     return {"client_id": config.client_id, "currency_code": config.currency_code}
 
 
+@router.get("/paypal/config/debug")
+def paypal_debug_config(
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(require_admin),
+) -> Dict[str, Any]:
+    env_client_id, env_client_secret, env_mode, env_currency = _get_paypal_env()
+    config = db.query(models.PayPalConfig).order_by(models.PayPalConfig.created_at.desc()).first()
+    config_client_id = config.client_id if config else ""
+    config_mode = config.mode if config else ""
+    config_currency = config.currency_code if config else ""
+
+    def _mask(value: str) -> str:
+        if not value:
+            return ""
+        if len(value) <= 10:
+            return f"{value[:2]}***{value[-2:]}"
+        return f"{value[:6]}***{value[-4:]}"
+
+    # Never expose secrets; return only masked identifiers and presence flags.
+    return {
+        "env": {
+            "client_id": _mask(env_client_id),
+            "client_secret_present": bool(env_client_secret),
+            "mode": env_mode,
+            "currency": env_currency,
+        },
+        "db": {
+            "client_id": _mask(config_client_id),
+            "mode": config_mode,
+            "currency": config_currency,
+        },
+    }
+
+
 @router.post("/paypal/create-order")
 def paypal_create_order(payload: PayPalOrderRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
     if requests is None:
