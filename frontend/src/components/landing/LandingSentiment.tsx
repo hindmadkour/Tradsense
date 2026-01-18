@@ -2,28 +2,33 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import GlassCard from "@/components/ui/GlassCard";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FadeIn from "@/components/motion/FadeIn";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const sentimentData = [
-  { label: "Bullish", value: 65 },
-  { label: "Neutral", value: 22 },
-  { label: "Risk-off", value: 13 },
-];
+const LandingSentiment = () => {
+  const { t } = useLanguage();
+  const sentimentData = [
+    { label: t("landing_sentiment_bullish"), value: 65 },
+    { label: t("landing_sentiment_neutral"), value: 22 },
+    { label: t("landing_sentiment_riskoff"), value: 13 },
+  ];
 
-const LandingSentiment = () => (
-  <section className="py-24">
-    <div className="container mx-auto px-4 space-y-10">
-      <SectionHeader
-        kicker="Market sentiment"
-        title="Institutional grade pulse on liquidity and risk"
-        subtitle="We aggregate order flow, options skew, and volatility surfaces into a unified score."
-      />
+  return (
+    <section className="py-24">
+      <div className="container mx-auto px-4 space-y-10">
+        <SectionHeader
+          kicker={t("landing_sentiment_kicker")}
+          title={t("landing_sentiment_title")}
+          subtitle={t("landing_sentiment_subtitle")}
+        />
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <FadeIn>
           <GlassCard className="p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Order flow</div>
-              <span className="text-sm font-semibold text-success">Strong rally</span>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                {t("landing_sentiment_order_flow")}
+              </div>
+              <span className="text-sm font-semibold text-success">{t("landing_sentiment_rally")}</span>
             </div>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
@@ -53,7 +58,7 @@ const LandingSentiment = () => (
               </ResponsiveContainer>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Liquidity coverage</span>
+              <span className="text-muted-foreground">{t("landing_sentiment_liquidity")}</span>
               <span className="text-primary font-semibold">240M</span>
             </div>
           </GlassCard>
@@ -62,9 +67,9 @@ const LandingSentiment = () => (
         <FadeIn delay={0.1}>
           <div className="space-y-4">
             {[
-              { label: "Macro risk", detail: "Hedged" },
-              { label: "FX skew", detail: "+15 bps" },
-              { label: "Volatility", detail: "VIX 14.2" },
+              { label: t("landing_sentiment_macro"), detail: t("landing_sentiment_macro_value") },
+              { label: t("landing_sentiment_fx"), detail: t("landing_sentiment_fx_value") },
+              { label: t("landing_sentiment_volatility"), detail: t("landing_sentiment_volatility_value") },
             ].map((item) => (
               <GlassCard key={item.label} className="p-4 border border-border/60">
                 <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{item.label}</div>
@@ -75,7 +80,8 @@ const LandingSentiment = () => (
         </FadeIn>
       </div>
     </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default LandingSentiment;

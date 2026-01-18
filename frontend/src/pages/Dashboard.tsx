@@ -9,6 +9,7 @@ import TickerTape from "@/components/ui/TickerTape";
 import SkeletonBlock from "@/components/ui/SkeletonBlock";
 import { usePortfolio } from "@/lib/api";
 import { getCurrentUserId } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const buildEquitySeries = (initialValue: number, trades: Array<{ profit?: number; timestamp?: string }>) => {
   const dailyProfit: Record<string, number> = {};
@@ -49,13 +50,6 @@ const tickers = [
   { symbol: "USD/MAD", price: "10.12", change: "-0.4%", positive: false },
 ];
 
-const confidence = [
-  { label: "Trend", value: 86 },
-  { label: "Volatility", value: 72 },
-  { label: "Liquidity", value: 91 },
-  { label: "Risk Fit", value: 88 },
-];
-
 const confidenceWidth = (value: number) => {
   const map: Record<number, string> = {
     72: "w-[72%]",
@@ -68,6 +62,7 @@ const confidenceWidth = (value: number) => {
 
 const Dashboard = () => {
   const userId = getCurrentUserId();
+  const { t } = useLanguage();
   const { portfolio, isLoading, isFetching } = usePortfolio(userId);
   const [loading, setLoading] = useState(true);
 
@@ -106,6 +101,13 @@ const Dashboard = () => {
     return buildEquitySeries(initialBalance || equityValue, trades);
   }, [account, initialBalance, equityValue, trades]);
 
+  const confidence = [
+    { label: t("dashboard_confidence_trend"), value: 86 },
+    { label: t("dashboard_confidence_volatility"), value: 72 },
+    { label: t("dashboard_confidence_liquidity"), value: 91 },
+    { label: t("dashboard_confidence_risk_fit"), value: 88 },
+  ];
+
   return (
     <PageTransition>
       <DashboardLayout>
@@ -114,10 +116,10 @@ const Dashboard = () => {
 
           <div className="grid gap-4 lg:grid-cols-4">
             {[
-              { label: "Equity", value: equityValue || 0, format: (val: number) => `$${val.toFixed(0)}` },
-              { label: "Daily PnL", value: dailyPnlPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
-              { label: "Drawdown", value: dailyDrawdownPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
-              { label: "Win Rate", value: winRate || 0, format: (val: number) => `${val.toFixed(0)}%` },
+              { label: t("dashboard_stat_equity"), value: equityValue || 0, format: (val: number) => `$${val.toFixed(0)}` },
+              { label: t("dashboard_stat_daily_pnl"), value: dailyPnlPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
+              { label: t("dashboard_stat_drawdown"), value: dailyDrawdownPct || 0, format: (val: number) => `${val.toFixed(1)}%` },
+              { label: t("dashboard_stat_win_rate"), value: winRate || 0, format: (val: number) => `${val.toFixed(0)}%` },
             ].map((stat) => (
               <GlassCard key={stat.label} className="p-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</div>
@@ -134,10 +136,10 @@ const Dashboard = () => {
             <GlassCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Equity curve</div>
-                  <div className="text-lg font-semibold">7-day performance</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("dashboard_equity_curve")}</div>
+                  <div className="text-lg font-semibold">{t("dashboard_equity_window")}</div>
                 </div>
-                <span className="text-sm text-success">+9.4% week</span>
+                <span className="text-sm text-success">+9.4% {t("dashboard_equity_week")}</span>
               </div>
               <div className="mt-6 h-64">
                 {loading || isFetching ? (
@@ -169,9 +171,9 @@ const Dashboard = () => {
             <div className="space-y-6">
               <GlassCard className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold">AI Momentum Scanner</div>
+                  <div className="text-sm font-semibold">{t("dashboard_ai_momentum")}</div>
                   <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
-                    Live
+                    {t("dashboard_live")}
                   </span>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-secondary/40 p-4">
@@ -180,8 +182,10 @@ const Dashboard = () => {
                       <Sparkles className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold">NAS100 breakout</div>
-                      <div className="text-xs text-muted-foreground">Confidence 92% • Risk aligned</div>
+                      <div className="text-sm font-semibold">{t("dashboard_breakout_title")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("dashboard_breakout_confidence")} 92% • {t("dashboard_breakout_risk")}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-4 h-2 w-full rounded-full bg-background/60">
@@ -209,19 +213,19 @@ const Dashboard = () => {
 
               <GlassCard className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold">Risk Shield</div>
+                  <div className="text-sm font-semibold">{t("dashboard_risk_shield")}</div>
                   <ShieldCheck className="h-5 w-5 text-success" />
                 </div>
                 <div className="space-y-3 text-xs text-muted-foreground">
                   <div className="flex items-center justify-between">
-                    <span>Daily drawdown</span>
+                    <span>{t("dashboard_daily_drawdown_label")}</span>
                     <span className="text-foreground">{dailyDrawdownPct.toFixed(1)}% / 5%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-background/60">
                     <div className="h-full rounded-full bg-success" style={{ width: `${Math.min(100, (dailyDrawdownPct / 5) * 100)}%` }} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Total drawdown</span>
+                    <span>{t("dashboard_total_drawdown_label")}</span>
                     <span className="text-foreground">{totalDrawdownPct.toFixed(1)}% / 10%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-background/60">
@@ -236,7 +240,7 @@ const Dashboard = () => {
             <GlassCard className="p-6 space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Confidence meters
+                {t("dashboard_confidence_meters")}
               </div>
               <div className="space-y-4">
                 {confidence.map((item) => (
@@ -256,20 +260,20 @@ const Dashboard = () => {
             <GlassCard className="p-6 space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <Zap className="h-5 w-5 text-warning" />
-                Trade checklist
+                {t("dashboard_trade_checklist")}
               </div>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/40 px-4 py-3">
-                  <span>News risk scanned</span>
-                  <span className="text-success">Cleared</span>
+                  <span>{t("dashboard_check_news")}</span>
+                  <span className="text-success">{t("dashboard_check_cleared")}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/40 px-4 py-3">
-                  <span>Exposure limit</span>
-                  <span className="text-success">OK</span>
+                  <span>{t("dashboard_check_exposure")}</span>
+                  <span className="text-success">{t("dashboard_check_ok")}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/40 px-4 py-3">
-                  <span>Stops attached</span>
-                  <span className="text-warning">Pending</span>
+                  <span>{t("dashboard_check_stops")}</span>
+                  <span className="text-warning">{t("dashboard_check_pending")}</span>
                 </div>
               </div>
             </GlassCard>

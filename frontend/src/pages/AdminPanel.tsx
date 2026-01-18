@@ -226,7 +226,7 @@ const AdminPanel = () => {
   const sendContactReply = async (messageId: number) => {
     const reply = (replyDrafts[messageId] || '').trim();
     if (!reply) {
-      toast({ title: 'Reply required', description: 'Please write a reply before sending.', variant: 'destructive' });
+      toast({ title: t('admin_reply_required'), description: t('admin_reply_required_desc'), variant: 'destructive' });
       return;
     }
     setReplySending(messageId);
@@ -240,11 +240,11 @@ const AdminPanel = () => {
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to send reply');
       }
-      toast({ title: 'Reply sent', description: 'The message has been answered.' });
+      toast({ title: t('admin_reply_sent'), description: t('admin_reply_sent_desc') });
       setReplyDrafts((prev) => ({ ...prev, [messageId]: '' }));
       fetchContactMessages();
     } catch (error) {
-      toast({ title: 'Send failed', description: 'Unable to send the reply.', variant: 'destructive' });
+      toast({ title: t('admin_reply_failed'), description: t('admin_reply_failed_desc'), variant: 'destructive' });
     } finally {
       setReplySending(null);
     }
@@ -387,11 +387,14 @@ const AdminPanel = () => {
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to update withdrawal');
       }
-      toast({ title: t('admin_saved'), description: `Withdrawal ${withdrawalId} -> ${status}` });
+      toast({
+        title: t('admin_saved'),
+        description: t('admin_withdrawal_updated').replace('{id}', String(withdrawalId)).replace('{status}', status),
+      });
       fetchWithdrawals();
       fetchAnalytics();
     } catch (error) {
-      toast({ title: t('admin_error'), description: 'Failed to update withdrawal', variant: 'destructive' });
+      toast({ title: t('admin_error'), description: t('admin_withdrawal_update_error'), variant: 'destructive' });
     }
   };
 

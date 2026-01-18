@@ -84,7 +84,7 @@ const LandingNavbar = () => {
             aria-expanded={isOpen}
             aria-controls="mobile-nav"
           >
-            Menu
+            {t("nav_menu")}
           </button>
         </div>
 

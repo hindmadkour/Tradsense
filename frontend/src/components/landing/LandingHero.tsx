@@ -6,6 +6,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import TickerTape from "@/components/ui/TickerTape";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const heroCurve = [
   { time: "08:00", value: 11800 },
@@ -25,6 +26,8 @@ const tickers = [
 ];
 
 const LandingHero = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="relative overflow-hidden pt-24 pb-24">
       <div className="absolute inset-0 bg-hero-pattern opacity-35 blur-xl" />
@@ -40,7 +43,7 @@ const LandingHero = () => {
             className="flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-muted-foreground"
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            Trading floor intelligence
+            {t("landing_hero_kicker")}
           </motion.div>
 
           <motion.h1
@@ -49,9 +52,9 @@ const LandingHero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Command every market with{" "}
+            {t("landing_hero_title_prefix")}{" "}
             <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">
-              cinematic precision.
+              {t("landing_hero_title_emphasis")}
             </span>
           </motion.h1>
 
@@ -61,9 +64,7 @@ const LandingHero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            TradeSense unifies AI signals, live market data, and institutional compliance into a single
-            glass cockpit. Switch between clear and dark modes while keeping high-impact visuals and
-            cinematic motion.
+            {t("landing_hero_subtitle")}
           </motion.p>
 
           <motion.div
@@ -74,12 +75,12 @@ const LandingHero = () => {
           >
             <Button variant="hero" size="xl" asChild>
               <Link to="/register">
-                Start Challenge
+                {t("start_challenge")}
                 <ArrowUpRight className="h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="xl" asChild>
-              <a href="#pricing">View Pricing</a>
+              <a href="#pricing">{t("landing_hero_view_pricing")}</a>
             </Button>
           </motion.div>
         </div>
@@ -88,12 +89,12 @@ const LandingHero = () => {
           <GlassCard className="p-6 space-y-4 border border-border/60 bg-card/80 backdrop-blur-3xl">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Market pulse</div>
-                <div className="text-lg font-semibold">BVC • NASDAQ • FX</div>
+                <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("landing_hero_market_pulse")}</div>
+                <div className="text-lg font-semibold">{t("landing_hero_market_list")}</div>
               </div>
               <div className="flex items-center gap-2 text-success text-xs">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                Live
+                {t("landing_hero_live")}
               </div>
             </div>
 
@@ -113,9 +114,9 @@ const LandingHero = () => {
 
             <div className="grid grid-cols-3 gap-3 text-center text-xs text-muted-foreground">
               {[
-                { label: "Bid/Ask spread", value: "0.03%" },
-                { label: "Latency", value: "< 180ms" },
-                { label: "AI confidence", value: "94%" },
+                { label: t("landing_hero_stat_spread"), value: "0.03%" },
+                { label: t("landing_hero_stat_latency"), value: "< 180ms" },
+                { label: t("landing_hero_stat_confidence"), value: "94%" },
               ].map((item) => (
                 <div key={item.label} className="flex flex-col gap-1">
                   <span className="text-[10px] uppercase tracking-[0.4em]">{item.label}</span>
@@ -127,14 +128,14 @@ const LandingHero = () => {
 
           <GlassCard className="p-5 border border-border/50">
             <div className="flex items-center justify-between">
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Global reach</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("landing_hero_global_reach")}</div>
               <Globe className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="mt-3 grid grid-cols-3 gap-4 text-center">
               {[
-                { label: "50+", value: "Markets" },
-                { label: "96%", value: "Signal uptime" },
-                { label: "24/7", value: "Desk support" },
+                { label: t("landing_hero_global_markets"), value: "50+" },
+                { label: t("landing_hero_global_uptime"), value: "96%" },
+                { label: t("landing_hero_global_support"), value: "24/7" },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
                   <div className="text-sm font-semibold">{item.value}</div>
@@ -148,7 +149,7 @@ const LandingHero = () => {
 
       <div className="container mx-auto px-4 mt-12 z-10">
         <GlassCard className="p-4">
-          <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Live ticker</div>
+          <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t("landing_hero_ticker")}</div>
           <TickerTape items={tickers} className="mt-3" />
         </GlassCard>
       </div>

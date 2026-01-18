@@ -2,6 +2,7 @@ import { Line, LineChart, ResponsiveContainer } from "recharts";
 import GlassCard from "@/components/ui/GlassCard";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FadeIn from "@/components/motion/FadeIn";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const marketData = [
   {
@@ -54,14 +55,17 @@ const marketData = [
   },
 ];
 
-const LandingMarkets = () => (
-  <section id="markets" className="py-24">
-    <div className="container mx-auto px-4 space-y-12">
-      <SectionHeader
-        kicker="Live markets"
-        title="Real-time pulse across crypto, indices, and FX"
-        subtitle="Track the same feeds our AI scans for momentum, volatility, and breakout triggers."
-      />
+const LandingMarkets = () => {
+  const { t } = useLanguage();
+
+  return (
+    <section id="markets" className="py-24">
+      <div className="container mx-auto px-4 space-y-12">
+        <SectionHeader
+          kicker={t("landing_markets_kicker")}
+          title={t("landing_markets_title")}
+          subtitle={t("landing_markets_subtitle")}
+        />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {marketData.map((market, index) => (
@@ -93,14 +97,15 @@ const LandingMarkets = () => (
                 </ResponsiveContainer>
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">
-                24H range
+                {t("landing_markets_range")}
               </div>
             </GlassCard>
           </FadeIn>
         ))}
       </div>
     </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default LandingMarkets;

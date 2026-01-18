@@ -158,7 +158,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             className="rounded-xl border border-border/60 px-3 py-2 text-xs text-muted-foreground"
           >
-            Menu
+            {t('nav_menu')}
           </button>
           <div className="text-sm font-semibold">{pageTitle}</div>
         </div>
@@ -182,11 +182,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="p-4 lg:p-8 space-y-6">
           <GlassCard className="p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Dashboard</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t('dashboard')}</div>
               <h1 className="text-2xl md:text-3xl font-semibold">{pageTitle}</h1>
             </div>
             <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:gap-4">
-              <div className="text-xs text-muted-foreground">Session status: Live</div>
+              <div className="text-xs text-muted-foreground">
+                {t('dashboard_session_status')} {t('dashboard_session_live')}
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
