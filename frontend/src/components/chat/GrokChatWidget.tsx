@@ -13,12 +13,118 @@ interface ChatMessage {
 
 const getQuickReplies = (language: string) => {
   if (language === "ar") {
-    return ["كيف أبدأ التحدي؟", "ما هي الأسعار؟", "ما هي قواعد السحب؟"];
+    return [
+      "كيف أبدأ التحدي؟",
+      "ما هي الأسعار؟",
+      "ما هي القواعد؟",
+      "هل توجد تجربة مجانية؟",
+      "ما طرق الدفع المتاحة؟",
+      "كيف اغير خطتي؟",
+      "كيف اعيد تعيين كلمة المرور؟",
+      "كيف يتم السحب؟",
+      "هل يوجد دعم مباشر؟",
+      "اريد التواصل مع المبيعات",
+    ];
   }
   if (language === "en") {
-    return ["How do I start?", "What are the prices?", "What are the rules?"];
+    return [
+      "How do I start?",
+      "What are the prices?",
+      "What are the rules?",
+      "Do you offer a free trial?",
+      "What payment methods do you support?",
+      "How do I change my plan?",
+      "How do I reset my password?",
+      "How do withdrawals work?",
+      "Is live support available?",
+      "I want to contact sales",
+    ];
   }
-  return ["Comment demarrer ?", "Quels sont les tarifs ?", "Quelles sont les regles ?"];
+  return [
+    "Comment demarrer ?",
+    "Quels sont les tarifs ?",
+    "Quelles sont les regles ?",
+    "Proposez-vous un essai gratuit ?",
+    "Quels moyens de paiement ?",
+    "Comment changer de plan ?",
+    "Comment reinitialiser mon mot de passe ?",
+    "Comment fonctionnent les retraits ?",
+    "Y a-t-il un support en direct ?",
+    "Je veux contacter les ventes",
+  ];
+};
+
+const getQuickReplyResponses = (language: string) => {
+  if (language === "ar") {
+    return {
+      "كيف أبدأ التحدي؟":
+        "ابدأ بإنشاء حساب، ثم اختر الخطة، وبعدها أكمل الدفع للوصول إلى لوحة التحكم. هل تريد رابط التسجيل؟",
+      "ما هي الأسعار؟":
+        "الأسعار تختلف حسب الخطة والمزايا. أخبرني بحجم الحساب أو المدة لأقترح لك الأنسب.",
+      "ما هي القواعد؟":
+        "القواعد تشمل حدود السحب وإدارة المخاطر ومعايير التقييم. هل تريد ملخصًا سريعًا أم التفاصيل؟",
+      "هل توجد تجربة مجانية؟":
+        "نعم، يمكننا تفعيل تجربة محدودة حسب الخطة. ماذا تريد تجربته بالتحديد؟",
+      "ما طرق الدفع المتاحة؟":
+        "نقبل عادة بطاقات بنكية وطرق دفع إلكترونية حسب البلد. أخبرني ببلدك لأؤكد الخيارات.",
+      "كيف اغير خطتي؟":
+        "يمكنك ترقية أو تخفيض الخطة من صفحة الاشتراك. هل تريد المساعدة؟",
+      "كيف اعيد تعيين كلمة المرور؟":
+        "استخدم خيار \"نسيت كلمة المرور\" في صفحة تسجيل الدخول. هل تريد الرابط؟",
+      "كيف يتم السحب؟":
+        "السحب يتم وفق القواعد وحدود السحب الخاصة بالخطة. هل تريد شرحًا مختصرًا؟",
+      "هل يوجد دعم مباشر؟":
+        "نعم، يوجد دعم عبر الدردشة والبريد. أخبرني بمشكلتك وسأساعدك.",
+      "اريد التواصل مع المبيعات":
+        "أكيد. ارسل لي بريدك والبلد وسيتواصل معك فريق المبيعات.",
+    };
+  }
+  if (language === "en") {
+    return {
+      "How do I start?":
+        "Create an account, pick a plan, and complete checkout to access the dashboard. Want the signup link?",
+      "What are the prices?":
+        "Pricing depends on the plan and features. Tell me the account size or duration you want.",
+      "What are the rules?":
+        "Key rules include drawdown limits, risk management, and evaluation criteria. Want a quick summary or the full list?",
+      "Do you offer a free trial?":
+        "Yes, we can enable a limited trial depending on the plan. Tell me what you want to test.",
+      "What payment methods do you support?":
+        "We typically support cards and popular online methods depending on your country. Tell me your location to confirm.",
+      "How do I change my plan?":
+        "You can upgrade or downgrade in the subscription page. Need help?",
+      "How do I reset my password?":
+        "Use the \"Forgot password\" link on the login page. Want the link?",
+      "How do withdrawals work?":
+        "Withdrawals follow the rules and limits for your plan. Want a quick summary?",
+      "Is live support available?":
+        "Yes, we offer chat and email support. Tell me what you need help with.",
+      "I want to contact sales":
+        "Sure. Share your email and country and sales will reach out.",
+    };
+  }
+  return {
+    "Comment demarrer ?":
+      "Creez un compte, choisissez une offre, puis finalisez le paiement pour acceder au tableau de bord. Voulez-vous le lien ?",
+    "Quels sont les tarifs ?":
+      "Les tarifs dependent du plan et des fonctionnalites. Dites-moi la taille du compte ou la duree souhaitee.",
+    "Quelles sont les regles ?":
+      "Les regles couvrent le drawdown, la gestion du risque et les criteres d'evaluation. Voulez-vous un resume ou le detail ?",
+    "Proposez-vous un essai gratuit ?":
+      "Oui, nous pouvons activer un essai limite selon le plan. Que voulez-vous tester ?",
+    "Quels moyens de paiement ?":
+      "Nous acceptons generalement les cartes et des moyens en ligne selon le pays. Dites-moi votre pays pour confirmer.",
+    "Comment changer de plan ?":
+      "Vous pouvez changer de plan depuis la page abonnement. Besoin d'aide ?",
+    "Comment reinitialiser mon mot de passe ?":
+      "Utilisez le lien \"Mot de passe oublie\" sur la page de connexion. Voulez-vous le lien ?",
+    "Comment fonctionnent les retraits ?":
+      "Les retraits suivent les regles et les limites de votre plan. Voulez-vous un resume ?",
+    "Y a-t-il un support en direct ?":
+      "Oui, support via chat et email. Dites-moi votre besoin et je vous guide.",
+    "Je veux contacter les ventes":
+      "D'accord. Donnez-moi votre email et votre pays, l'equipe ventes vous contacte.",
+  };
 };
 
 const getGreeting = (language: string) => {
@@ -56,6 +162,10 @@ const GrokChatWidget = () => {
   }, [isOpen, messages]);
 
   const quickReplies = useMemo(() => getQuickReplies(language), [language]);
+  const quickReplyResponses = useMemo(
+    () => getQuickReplyResponses(language),
+    [language],
+  );
 
   const sendMessage = async (content: string) => {
     const trimmed = content.trim();
@@ -67,9 +177,15 @@ const GrokChatWidget = () => {
     ];
     setMessages(nextMessages);
     setInput("");
-    setIsSending(true);
     setError(null);
 
+    const instantReply = quickReplyResponses[trimmed];
+    if (instantReply) {
+      setMessages((prev) => [...prev, { role: "assistant", content: instantReply }]);
+      return;
+    }
+
+    setIsSending(true);
     try {
       const response = await fetch(`${API_BASE_URL}/chat/grok`, {
         method: "POST",
